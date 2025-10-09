@@ -90,6 +90,8 @@ fn handle_error_impl(e: SteelErr) {
                     default()
                 }
             })
+        } else {
+            default()
         }
     } else {
         default()
