@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use log::{error, info};
+use log::info;
 use notify_debouncer_full::{
     Debouncer, FileIdMap,
     notify::{EventKind, ReadDirectoryChangesWatcher, RecursiveMode},
@@ -119,27 +119,17 @@ impl Scripts {
 
     pub fn run<T: AsRef<str>>(&self, name: T) -> Result<Vec<SteelVal>> {
         let name = name.as_ref();
-        let (src, prog) = if let Some(entry) = self.scripts.borrow().get(name) {
+        let (_, prog) = if let Some(entry) = self.scripts.borrow().get(name) {
             entry.clone()
         } else {
-            let script = match self.load_script(&Path::new(name)) {
-                Ok(script) => script,
-                Err(e) => {
-                    error!("{e}");
-                    return Err(e)
-                },
-            };
-            
+            let script = self.load_script(&Path::new(name))?;
+
             self.scripts
                 .borrow_mut()
                 .insert(name.to_string(), script.clone());
             script
         };
 
-        let res = ENGINE.with(|engine| engine.borrow_mut().run_raw_program(prog));
-        if let Err(e) = &res {
-            error!("{}", e.emit_result_to_string("name", &src));
-        }
-        res
+        ENGINE.with(|engine| engine.borrow_mut().run_raw_program(prog))
     }
 }

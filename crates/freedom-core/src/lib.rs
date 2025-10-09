@@ -9,7 +9,7 @@ pub use steel;
 
 use std::{cell::RefCell, error::Error, future::Future, ops::Deref, rc::Rc};
 
-use log::info;
+use log::{error, info};
 use steel::{
     SteelErr, SteelVal,
     compiler::program::RawProgramWithSymbols,
@@ -69,9 +69,31 @@ pub fn with_engine_mut<T>(f: impl FnOnce(&mut SteelEngine) -> T) -> T {
     ENGINE.with(|engine| f(&mut engine.borrow_mut()))
 }
 
-fn handle_error_impl<E: Error>(e: E) {
-    log::error!("{}", e);
-    //eprintln!("{e}");
+fn handle_error_impl(e: SteelErr) {
+    let default = || error!("{e}");
+
+    if let Some(span) = e.span() {
+        if let Some(source_id) = span.source_id() {
+            with_engine(|engine| {
+                if let Some(source_path) = engine.get_path_for_source_id(&source_id) {
+                    let Some(source_path) = source_path.to_str() else {
+                        error!("Failed to convert path into a string slice: {source_path:?}");
+                        return;
+                    };
+
+                    if let Some(source) = engine.get_source(&source_id) {
+                        error!("{}", e.emit_result_to_string(source_path, &source));
+                    } else {
+                        default()
+                    }
+                } else {
+                    default()
+                }
+            })
+        }
+    } else {
+        default()
+    }
 }
 
 pub fn handle_error<T>(res: Result<T>) {

@@ -14,5 +14,5 @@ pub fn module() -> BuiltInModule {
 
 #[unsafe(no_mangle)]
 pub fn init() {
-    freedom_core::logging::init();
+    freedom_core::logging::init_local();
 }

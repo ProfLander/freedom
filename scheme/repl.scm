@@ -1,10 +1,12 @@
-(provide repl)
+(require-builtin freedom/async)
+(require-builtin freedom/log)
 
-(define [repl]
-  (display "]> ")
-  (call-with-exception-handler
-    (lambda (e)
-      (displayln "ERROR:" e))
-    (lambda ()
-      (displayln (eval-string (read-line)))))
-  (#%spawn repl))
+(call-with-exception-handler
+  (lambda (e)
+    (error! "ERROR:" e))
+  (lambda ()
+    (display "> ")
+    (flush-output-port (current-output-port))
+    (displayln (eval-string (read-line)))))
+
+(#%spawn 'repl)

@@ -145,7 +145,7 @@ fn run_winit(args: &[SteelVal]) -> Result<SteelVal> {
 
 #[unsafe(no_mangle)]
 pub fn init() {
-    freedom_core::logging::init();
+    freedom_core::logging::init_local();
 }
 
 #[unsafe(no_mangle)]
