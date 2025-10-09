@@ -7,7 +7,7 @@ use std::{
 use crate::{Result, err, handle_error, handle_error_with};
 use libloading::Library;
 use log::info;
-use steel::{rvals::Custom, stop, throw};
+use steel::{rvals::Custom, steelerr, throw};
 
 // Handle to a temporary copy of a dynamic library
 #[derive(Debug)]
@@ -50,7 +50,7 @@ impl Dylib {
         std::fs::copy(&src, &dest)?;
 
         info!("Loading...");
-        let lib = unsafe { Library::new(&dest).or_else(|e| stop!(Io => e))? };
+        let lib = unsafe { Library::new(&dest).or_else(|e| steelerr!(Io => e))? };
         let lib = ManuallyDrop::new(lib);
 
         Ok(Dylib { path: dest, lib })
@@ -63,6 +63,6 @@ impl Drop for Dylib {
         unsafe { ManuallyDrop::drop(&mut self.lib) };
 
         info!("Removing tempfile at {:?}...", self.path);
-        handle_error(std::fs::remove_file(&self.path).or_else(|e| stop!(Io => e)))
+        handle_error(std::fs::remove_file(&self.path).or_else(|e| steelerr!(Io => e)))
     }
 }

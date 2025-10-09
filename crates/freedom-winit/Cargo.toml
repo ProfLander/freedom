@@ -8,5 +8,5 @@ crate-type = ["dylib"]
 
 [dependencies]
 freedom-core = { workspace = true }
-steel-core = { workspace = true }
+
 winit = "0.30.12"

@@ -11,7 +11,7 @@ use notify_debouncer_full::{
     Debouncer, FileIdMap,
     notify::{EventKind, ReadDirectoryChangesWatcher, RecursiveMode},
 };
-use steel::{SteelVal, compiler::program::RawProgramWithSymbols, stop, throw};
+use steel::{SteelVal, compiler::program::RawProgramWithSymbols, steelerr, throw};
 
 use crate::{ENGINE, Result, handle_error_with};
 
@@ -87,11 +87,11 @@ impl Scripts {
                 }
                 })
             },
-        ).or_else(|e| stop!(Generic => e))?;
+        ).or_else(|e| steelerr!(Generic => e))?;
 
         self.watcher
             .set(debouncer)
-            .or_else(|_| stop!(Generic => "Watcher has already been set"))?;
+            .or_else(|_| steelerr!(Generic => "Watcher has already been set"))?;
 
         Ok(())
     }
@@ -103,8 +103,8 @@ impl Scripts {
         path.set_extension("scm");
 
         let src: Cow<'static, str> =
-            Cow::Owned(std::fs::read_to_string(&path).or_else(|e| stop!(Generic => e))?);
-        let prog = ENGINE.with_borrow_mut(|engine| engine.emit_raw_program(src.clone(), path))?;
+            Cow::Owned(std::fs::read_to_string(&path).or_else(|e| steelerr!(Generic => e))?);
+        let prog = ENGINE.with(|engine| engine.borrow_mut().emit_raw_program(src.clone(), path))?;
         Ok((src, prog))
     }
 
@@ -122,14 +122,21 @@ impl Scripts {
         let (src, prog) = if let Some(entry) = self.scripts.borrow().get(name) {
             entry.clone()
         } else {
-            let script = self.load_script(&Path::new(name))?;
+            let script = match self.load_script(&Path::new(name)) {
+                Ok(script) => script,
+                Err(e) => {
+                    error!("{e}");
+                    return Err(e)
+                },
+            };
+            
             self.scripts
                 .borrow_mut()
                 .insert(name.to_string(), script.clone());
             script
         };
 
-        let res = ENGINE.with_borrow_mut(|engine| engine.run_raw_program(prog));
+        let res = ENGINE.with(|engine| engine.borrow_mut().run_raw_program(prog));
         if let Err(e) = &res {
             error!("{}", e.emit_result_to_string("name", &src));
         }

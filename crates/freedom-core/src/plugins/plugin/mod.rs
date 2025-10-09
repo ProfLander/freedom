@@ -8,7 +8,7 @@ use steel::{
     SteelVal,
     rvals::{Custom, IntoSteelVal},
     steel_vm::{builtin::BuiltInModule, engine::Engine},
-    stop, throw,
+    steelerr, throw,
 };
 
 use crate::Result;
@@ -44,9 +44,14 @@ impl Plugin {
         info!("Dropping existing dylib...");
         let _ = engine.update_value(&format!("%-plugin-dylib-{}", name), SteelVal::Void);
 
+        info!("Extracting init symbol...");
+        if let Ok(init) = unsafe { lib.get::<fn()>(b"init") } {
+            init();
+        }
+
         info!("Extracting module symbol...");
         let sym: Symbol<fn() -> BuiltInModule> =
-            unsafe { lib.get(b"module").or_else(|e| stop!(Io => e))? };
+            unsafe { lib.get(b"module").or_else(|e| steelerr!(Io => e))? };
 
         info!("Registering module...");
         engine.register_module(sym());

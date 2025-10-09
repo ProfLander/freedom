@@ -1,7 +1,10 @@
-(display "]> ")
-(call-with-exception-handler
-  (lambda (e)
-    (displayln "ERROR:" e))
-  (lambda ()
-    (displayln (eval-string (read-line)))))
-(#%spawn 'repl)
+(provide repl)
+
+(define [repl]
+  (display "]> ")
+  (call-with-exception-handler
+    (lambda (e)
+      (displayln "ERROR:" e))
+    (lambda ()
+      (displayln (eval-string (read-line)))))
+  (#%spawn repl))

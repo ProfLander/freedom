@@ -11,7 +11,7 @@ members = [
 freedom-core = { path = "crates/freedom-core" }
 freedom-winit = { path = "crates/freedom-winit" }
 
-steel-core = { git = "https://github.com/mattwparas/steel", rev = "f1829864", features = [
+steel-core = { git = "https://github.com/mattwparas/steel", rev = "6bb6f17be7cb0ce932816a697cfafc669490d489", features = [
     "markdown",        # Augment help functionality with markdown rendering
     "stacker",         # Grow the stack dynamically during transduction
     "triomphe",        # Use triophe library instead of std Arc

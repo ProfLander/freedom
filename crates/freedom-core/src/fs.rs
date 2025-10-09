@@ -6,7 +6,7 @@ use notify_debouncer_full::{
     notify::{Config, Error, ReadDirectoryChangesWatcher, RecursiveMode},
 };
 use smol::channel::unbounded;
-use steel::stop;
+use steel::{steelerr};
 
 use crate::{r#async::EXECUTOR, handle_error, handle_error_async};
 
@@ -31,7 +31,10 @@ where
         timeout,
         tick_rate,
         move |result: DebounceEventResult| {
-            handle_error(tx.send_blocking(result).or_else(|e| stop!(Generic => e)))
+            handle_error(
+                tx.send_blocking(result)
+                    .or_else(|e| steelerr!(Generic => e)),
+            )
         },
         RecommendedCache::new(),
         Config::default()
@@ -45,8 +48,8 @@ where
             .spawn(handle_error_async::<_, ()>(async move {
                 loop {
                     let events = rx.recv().await;
-                    let events = events.or_else(|e| stop!(Generic => e))?;
-                    let events = events.or_else(|e| stop!(Generic => "{:?}", e))?;
+                    let events = events.or_else(|e| steelerr!(Generic => e))?;
+                    let events = events.or_else(|e| steelerr!(Generic => "{:?}", e))?;
                     for event in events {
                         f(event);
                     }

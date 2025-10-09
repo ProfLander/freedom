@@ -2,12 +2,15 @@
 (require-builtin freedom/winit)
 (require-builtin library)
 
-(#%spawn (run-winit #%executor))
+(require "repl.scm")
+(require "print-loop.scm")
 
-(define [loop]
-  (displayln "Print loop")
-  (print-hello)
-  (#%spawn loop))
-(#%spawn loop)
+(define device-event
+  (#%spawn (#%compile '(displayln "device event"))))
 
-(#%spawn 'repl)
+(#%spawn
+  (#%winit #%executor
+    #:device-event device-event))
+
+(#%spawn repl)
+(#%spawn print-loop)

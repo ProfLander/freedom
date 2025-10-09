@@ -9,7 +9,7 @@ use std::{
 
 use log::info;
 use notify_debouncer_full::notify::{EventKind, RecursiveMode};
-use steel::{stop, throw};
+use steel::{steelerr, throw};
 
 use crate::{ENGINE, Result, fs::Watcher, handle_error, plugins::plugin::Plugin, with_engine_mut};
 
@@ -21,7 +21,8 @@ pub fn init(dir: &str, names: Vec<String>) -> Result<()> {
     // Construct plugins
     let plugins = Plugins::new(&Path::new(dir), names)?;
 
-    ENGINE.with_borrow_mut(|engine| {
+    ENGINE.with(|engine| {
+        let engine = &mut engine.borrow_mut();
         for (_, v) in plugins.plugins.borrow().iter() {
             v.reload(engine)?;
         }
@@ -105,7 +106,7 @@ impl Plugins {
                 })
             },
         )
-        .or_else(|e| stop!(Io => e))?;
+        .or_else(|e| steelerr!(Io => e))?;
 
         Ok(debouncer)
     }

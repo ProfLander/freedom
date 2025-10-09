@@ -7,31 +7,76 @@ pub mod scripts;
 pub use smol;
 pub use steel;
 
-use std::cell::RefCell;
+use std::{cell::RefCell, error::Error, future::Future, ops::Deref, rc::Rc};
 
 use log::info;
-use steel::{SteelErr, steel_vm::engine::Engine};
+use steel::{
+    SteelErr, SteelVal,
+    compiler::program::RawProgramWithSymbols,
+    gc::Gc,
+    rvals::{Custom, FutureResult, IntoSteelVal},
+    steel_vm::{engine::Engine as SteelEngine, register_fn::RegisterFn},
+};
 
 pub type Result<T> = std::result::Result<T, SteelErr>;
 
+#[derive(Clone)]
+pub struct Engine(Rc<RefCell<SteelEngine>>);
+
+impl Deref for Engine {
+    type Target = RefCell<SteelEngine>;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_ref()
+    }
+}
+
+impl Custom for Engine {}
+
+#[derive(Clone)]
+pub struct Program(RawProgramWithSymbols);
+
+impl Program {
+    pub fn unwrap(self) -> RawProgramWithSymbols {
+        self.0
+    }
+}
+
+impl Custom for Program {}
+
 thread_local! {
-    static ENGINE: RefCell<Engine> = {
+    static ENGINE: Engine = {
         info!("Constructing Engine for {:?}", std::thread::current().id());
-        RefCell::new(Engine::new())
+        let engine = Engine(Rc::new(RefCell::new(SteelEngine::new())));
+        engine.borrow_mut()
+            .register_fn(
+                "#%compile",
+                |src: SteelVal| SteelVal::FutureV(Gc::new(FutureResult::new(Box::pin(async move {
+                    crate::with_engine_mut(|engine| {
+                        Program(engine.emit_raw_program_no_path(src.to_string())?).into_steelval()
+                    })
+                }))))
+        );
+        engine
     };
 }
 
-pub fn with_engine<T>(f: impl FnOnce(&Engine) -> T) -> T {
-    ENGINE.with_borrow(|engine| f(engine))
+pub fn with_engine<T>(f: impl FnOnce(&SteelEngine) -> T) -> T {
+    ENGINE.with(|engine| f(&engine.borrow()))
 }
 
-pub fn with_engine_mut<T>(f: impl FnOnce(&mut Engine) -> T) -> T {
-    ENGINE.with_borrow_mut(|engine| f(engine))
+pub fn with_engine_mut<T>(f: impl FnOnce(&mut SteelEngine) -> T) -> T {
+    ENGINE.with(|engine| f(&mut engine.borrow_mut()))
+}
+
+fn handle_error_impl<E: Error>(e: E) {
+    log::error!("{}", e);
+    //eprintln!("{e}");
 }
 
 pub fn handle_error<T>(res: Result<T>) {
     if let Err(e) = res {
-        log::error!("{}", e);
+        handle_error_impl(e);
     }
 }
 
@@ -40,7 +85,7 @@ where
     F: FnOnce() -> Result<T>,
 {
     if let Err(e) = f() {
-        log::error!("{}", e);
+        handle_error_impl(e);
     }
 }
 
@@ -49,7 +94,7 @@ where
     F: Future<Output = Result<T>>,
 {
     if let Err(e) = res.await {
-        log::error!("{}", e);
+        handle_error_impl(e);
     }
 }
 
