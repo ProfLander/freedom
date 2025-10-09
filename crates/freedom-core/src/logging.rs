@@ -9,6 +9,7 @@ use steel::{
 use crate::handle_error;
 
 pub fn init() {
+    init_local();
     crate::with_engine_mut(|engine| {
         let mut module = BuiltInModule::new("freedom/log");
         module.register_native_fn(
@@ -53,7 +54,6 @@ pub fn init() {
         );
         engine.register_module(module);
     });
-    init_local();
 }
 
 pub fn init_local() {
