@@ -1,0 +1,12 @@
+[package]
+name = "freedom-winit"
+version = "1.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+freedom-core = { workspace = true }
+steel-core = { workspace = true }
+winit = "0.30.12"
