@@ -1,20 +1,12 @@
-use freedom_core::plugins::plugin::{FunctionSpec, PluginSpec};
-use steel::steel_vm::builtin::Arity;
+use steel::steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn};
 
-#[unsafe(no_mangle)]
-pub fn print_hello() {
-    println!("Hello, wauw!");
+fn print_hello() {
+    println!("Hello, wow!");
 }
 
 #[unsafe(no_mangle)]
-pub fn spec() -> PluginSpec {
-    PluginSpec {
-        name: "library",
-        values: &[],
-        functions: &[FunctionSpec {
-            symbol: "print_hello",
-            name: "print-hello",
-            arity: Arity::Exact(0),
-        }],
-    }
+pub fn module() -> BuiltInModule {
+    let mut module = BuiltInModule::new("library");
+    module.register_fn("print-hello", print_hello);
+    module
 }

@@ -7,29 +7,12 @@ use log::info;
 use steel::{
     SteelVal,
     rvals::{Custom, IntoSteelVal},
-    steel_vm::{
-        builtin::{Arity, BuiltInModule},
-        engine::Engine,
-    },
-    stop,
+    steel_vm::{builtin::BuiltInModule, engine::Engine},
+    stop, throw,
 };
 
 use crate::Result;
 use dylib::Dylib;
-
-#[derive(Debug)]
-pub struct FunctionSpec {
-    pub symbol: &'static str,
-    pub name: &'static str,
-    pub arity: Arity,
-}
-
-#[derive(Debug)]
-pub struct PluginSpec {
-    pub name: &'static str,
-    pub values: &'static [&'static str],
-    pub functions: &'static [FunctionSpec],
-}
 
 // Interface to a reloadable rust dylib exposing a Steel module
 pub struct Plugin {
@@ -49,53 +32,24 @@ impl Plugin {
         info!("Plugin::module");
         let lib = Dylib::new(&self.path)?;
 
-        info!("Extracting plugin spec...");
-        let sym: Symbol<fn() -> PluginSpec> =
-            unsafe { lib.get(b"spec").or_else(|e| stop!(Io => e))? };
+        let name = self
+            .path
+            .file_stem()
+            .ok_or_else(throw!(Generic => "Path has no file stem: {:?}", self.path))?
+            .to_str()
+            .ok_or_else(
+                throw!(Generic => "Failed to convert path to string slice: {:?}", self.path),
+            )?;
 
-        let spec @ PluginSpec {
-            name,
-            values,
-            functions,
-        } = sym();
+        info!("Dropping existing dylib...");
+        let _ = engine.update_value(&format!("%-plugin-dylib-{}", name), SteelVal::Void);
 
-        info!("{spec:?}");
-
-        info!("Building module...");
-        let mut module = BuiltInModule::new(name);
-
-        for symbol in values {
-            let sym: Symbol<fn() -> SteelVal> =
-                unsafe { lib.get(symbol.as_bytes()).or_else(|e| stop!(Io => e))? };
-            let val = sym();
-            info!("Registering {symbol} = {val}");
-            module.register_value(symbol, val);
-        }
-
-        for spec @ FunctionSpec {
-            symbol,
-            name,
-            arity,
-        } in functions
-        {
-            info!("Registering function...");
-            info!("{spec:?}");
-            let sym: Symbol<fn(&[SteelVal]) -> Result<SteelVal>> =
-                unsafe { lib.get(symbol.as_bytes()).or_else(|e| stop!(Io => e))? };
-            module.register_native_fn(name, *sym, *arity);
-        }
-
-        info!("Checking for existing dylib...");
-        let existing = engine.update_value(&format!("%-plugin-dylib-{}", name), SteelVal::Void);
-        if existing.is_some() {
-            info!("Dropped");
-        }
-        else {
-            info!("Not loaded");
-        }
+        info!("Extracting module symbol...");
+        let sym: Symbol<fn() -> BuiltInModule> =
+            unsafe { lib.get(b"module").or_else(|e| stop!(Io => e))? };
 
         info!("Registering module...");
-        engine.register_module(module);
+        engine.register_module(sym());
 
         // Inject dylib into module for lifetime control
         info!("Emplacing new dylib...");

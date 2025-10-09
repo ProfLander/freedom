@@ -1,17 +1,13 @@
-use freedom_core::{
-    r#async::Executor,
-    plugins::plugin::{FunctionSpec, PluginSpec},
-    smol::block_on,
-};
+use freedom_core::{r#async::Executor, smol::block_on};
 use steel::{
     SteelErr, SteelVal,
     gc::Gc,
-    rvals::{FromSteelVal, FutureResult},
+    rvals::FutureResult,
     steel_vm::{
-        builtin::{Arity, BuiltInModule},
+        builtin::{BuiltInModule},
         register_fn::RegisterFn,
     },
-    stop, throw,
+    stop,
 };
 use winit::{
     application::ApplicationHandler,
@@ -52,14 +48,7 @@ impl ApplicationHandler for App {
     }
 }
 
-#[unsafe(no_mangle)]
-pub fn run_winit(args: &[SteelVal]) -> Result<SteelVal, SteelErr> {
-    let exe = args
-        .get(0)
-        .ok_or_else(throw!(ArityMismatch => "Expected 1 argument"))?;
-
-    let exe: Executor = Executor::from_steelval(exe)?;
-
+fn run_winit(exe: Executor) -> Result<SteelVal, SteelErr> {
     Ok(SteelVal::FutureV(Gc::new(FutureResult::new(Box::pin(
         async move {
             let el = EventLoop::new().or_else(|e| stop!(Generic => e))?;
@@ -73,14 +62,8 @@ pub fn run_winit(args: &[SteelVal]) -> Result<SteelVal, SteelErr> {
 }
 
 #[unsafe(no_mangle)]
-pub fn spec() -> PluginSpec {
-    PluginSpec {
-        name: "freedom/winit",
-        values: &[],
-        functions: &[FunctionSpec {
-            symbol: "run_winit",
-            name: "run-winit",
-            arity: Arity::Exact(1),
-        }],
-    }
+pub fn module() -> BuiltInModule {
+    let mut module = BuiltInModule::new("freedom/winit");
+    module.register_fn("run-winit", run_winit);
+    module
 }
