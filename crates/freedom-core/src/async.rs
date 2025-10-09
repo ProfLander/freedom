@@ -1,12 +1,11 @@
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 
 use log::{error, info};
-use smol::{LocalExecutor, block_on, channel::bounded};
+use smol::{block_on, LocalExecutor};
 use steel::{
     SteelVal,
     rvals::{Custom, FromSteelVal, IntoSteelVal},
     steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
-    steelerr,
 };
 
 use crate::{Program, handle_error, handle_error_with};
@@ -115,6 +114,8 @@ pub fn executor() -> Executor {
 pub fn run() -> crate::Result<()> {
     let exe = executor();
     let exe = exe.borrow();
-    let (_tx, rx) = bounded::<()>(1);
-    Ok(block_on(exe.run(rx.recv())).or_else(|e| steelerr!(Generic => e))?)
+    while !exe.is_empty() {
+        block_on(exe.tick());
+    }
+    Ok(())
 }

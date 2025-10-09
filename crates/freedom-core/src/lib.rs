@@ -7,7 +7,7 @@ pub mod scripts;
 pub use smol;
 pub use steel;
 
-use std::{cell::RefCell, error::Error, future::Future, ops::Deref, rc::Rc};
+use std::{cell::RefCell, future::Future, ops::Deref, rc::Rc};
 
 use log::{error, info};
 use steel::{
