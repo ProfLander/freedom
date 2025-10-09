@@ -3,5 +3,4 @@
 
 (displayln "Print loop")
 (print-hello)
-
 (#%spawn 'print-loop)

@@ -46,7 +46,7 @@ impl Custom for Program {}
 
 thread_local! {
     static ENGINE: Engine = {
-        info!("Constructing Engine for {:?}", std::thread::current().id());
+        info!("Constructing new Engine on {:?}", std::thread::current().id());
         let engine = Engine(Rc::new(RefCell::new(SteelEngine::new())));
         engine.borrow_mut()
             .register_fn(

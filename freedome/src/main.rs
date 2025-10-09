@@ -24,13 +24,11 @@ fn main_impl() -> freedom_core::Result<()> {
 
     // Run main script
     info!("Running main");
-    if let Err(_) = freedom_core::scripts::run(&"main") {
-        return Ok(());
-    }
+    freedom_core::scripts::run(&"main")?;
 
     // Run async engine to completion
     info!("Running executor");
-    freedom_core::r#async::run()?;
+    freedom_core::r#async::run();
 
     Ok(())
 }

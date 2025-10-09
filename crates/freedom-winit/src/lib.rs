@@ -1,6 +1,8 @@
-use freedom_core::{r#async::Executor, handle_error, smol::block_on, steel::{
-    gc::Gc, primitives::lists::plist_get, rvals::{FromSteelVal, FutureResult}, steel_vm::builtin::{Arity, BuiltInModule}, steelerr, SteelVal
-}, Result};
+use freedom_core::{
+    r#async::Executor, handle_error, logging::info, smol::block_on, steel::{
+        gc::Gc, primitives::lists::plist_get, rvals::{FromSteelVal, FutureResult}, steel_vm::builtin::{Arity, BuiltInModule}, steelerr, SteelVal
+    }, Result
+};
 
 use winit::{
     application::ApplicationHandler,
@@ -24,7 +26,7 @@ struct App {
 impl App {
     fn callback(&self, callback: SteelVal, args: Vec<SteelVal>) -> Result<()> {
         if !matches!(callback, SteelVal::Void) {
-            self.executor.spawn(callback)
+            self.executor.spawn_value(callback);
         }
         Ok(())
     }
@@ -67,7 +69,7 @@ impl ApplicationHandler for App {
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
         handle_error(self.callback(self.about_to_wait.clone(), vec![]));
-        block_on(self.executor.borrow().tick());
+        block_on(self.executor.tick());
     }
 
     fn exiting(&mut self, event_loop: &ActiveEventLoop) {
@@ -82,49 +84,45 @@ impl ApplicationHandler for App {
 fn run_winit(args: &[SteelVal]) -> Result<SteelVal> {
     let mut args = args.iter().collect::<Vec<_>>();
 
-    if args.len() < 2 {
-        return steelerr!(ArityMismatch => "Expected at least 2 arguments");
+    if args.len() < 1 {
+        return steelerr!(ArityMismatch => "Expected at least 1 argument");
     }
 
+    // Pop off first argument and cast to executor
     let executor = Executor::from_steelval(args.remove(0))?;
+
+    // Extract keyword arguments
     let args = args.into_iter().collect();
 
     let default = |_| Ok(SteelVal::Void) as Result<SteelVal>;
 
     let resumed = plist_get(&args, &SteelVal::SymbolV("#:resumed".into())).or_else(default)?;
-    println!("resumed: {resumed:?}");
 
     let suspended = plist_get(&args, &SteelVal::SymbolV("#:suspended".into())).or_else(default)?;
-    println!("suspended: {suspended:?}");
 
     let new_events =
         plist_get(&args, &SteelVal::SymbolV("#:new-events".into())).or_else(default)?;
-    println!("new_events: {new_events:?}");
 
     let device_event =
         plist_get(&args, &SteelVal::SymbolV("#:device-event".into())).or_else(default)?;
-    println!("device_event: {device_event:?}");
 
     let window_event =
         plist_get(&args, &SteelVal::SymbolV("#:window-event".into())).or_else(default)?;
-    println!("window_event: {window_event:?}");
 
     let about_to_wait =
         plist_get(&args, &SteelVal::SymbolV("#:about-to-wait".into())).or_else(default)?;
-    println!("about_to_wait: {about_to_wait:?}");
 
     let exiting = plist_get(&args, &SteelVal::SymbolV("#:exiting".into())).or_else(default)?;
-    println!("exiting: {exiting:?}");
 
     let memory_warning =
         plist_get(&args, &SteelVal::SymbolV("#:memory-warning".into())).or_else(default)?;
-    println!("memory_warning: {memory_warning:?}");
 
+    // Return a future to run the winit event loop
     Ok(SteelVal::FutureV(Gc::new(FutureResult::new(Box::pin(
         async move {
             let el = EventLoop::new().or_else(|e| steelerr!(Generic => e))?;
             el.set_control_flow(ControlFlow::Poll);
-            println!("winit entering event loop");
+            info!("winit entering event loop");
             el.run_app(&mut App {
                 executor,
                 resumed,
@@ -137,7 +135,7 @@ fn run_winit(args: &[SteelVal]) -> Result<SteelVal> {
                 memory_warning,
             })
             .or_else(|e| steelerr!(Generic => e))?;
-            println!("winit exiting event loop");
+            info!("winit exiting event loop");
             Ok(SteelVal::Void)
         },
     )))))

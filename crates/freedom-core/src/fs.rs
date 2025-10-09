@@ -6,9 +6,9 @@ use notify_debouncer_full::{
     notify::{Config, Error, ReadDirectoryChangesWatcher, RecursiveMode},
 };
 use smol::channel::unbounded;
-use steel::{steelerr};
+use steel::steelerr;
 
-use crate::{r#async::EXECUTOR, handle_error, handle_error_async};
+use crate::{r#async::EXECUTOR, handle_error};
 
 pub type Watcher = Debouncer<ReadDirectoryChangesWatcher, FileIdMap>;
 
@@ -44,18 +44,16 @@ where
     )?;
 
     EXECUTOR.with(|exe| {
-        exe.borrow()
-            .spawn(handle_error_async::<_, ()>(async move {
-                loop {
-                    let events = rx.recv().await;
-                    let events = events.or_else(|e| steelerr!(Generic => e))?;
-                    let events = events.or_else(|e| steelerr!(Generic => "{:?}", e))?;
-                    for event in events {
-                        f(event);
-                    }
+        exe.spawn::<_, ()>(async move {
+            loop {
+                let events = rx.recv().await;
+                let events = events.or_else(|e| steelerr!(Generic => e))?;
+                let events = events.or_else(|e| steelerr!(Generic => "{:?}", e))?;
+                for event in events {
+                    f(event);
                 }
-            }))
-            .detach()
+            }
+        })
     });
 
     // Add a path to be watched. All files and directories at that path and

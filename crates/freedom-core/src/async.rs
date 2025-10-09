@@ -1,29 +1,52 @@
-use std::{cell::RefCell, ops::Deref, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
-use log::{error, info};
-use smol::{block_on, LocalExecutor};
+use log::info;
+use smol::{LocalExecutor, block_on};
 use steel::{
     SteelVal,
     rvals::{Custom, FromSteelVal, IntoSteelVal},
     steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+    stop,
 };
 
-use crate::{Program, handle_error, handle_error_with};
+use crate::{Program, Result, handle_error};
 
 thread_local! {
     pub(crate) static EXECUTOR: Executor = {
-        info!("Constructing Executor for {:?}", std::thread::current().id());
+        info!("Constructing new Executor on {:?}", std::thread::current().id());
         Executor::new()
     };
 }
 
-pub fn init() -> crate::Result<()> {
+pub fn init() -> Result<()> {
     crate::with_engine_mut(|engine| {
         let mut module = BuiltInModule::new("freedom/async");
 
         module
             .register_value("#%executor", executor().into_steelval()?)
-            .register_fn("#%spawn", |task: SteelVal| executor().spawn(task));
+            .register_fn("#%spawn", |task: SteelVal| {
+                info!("#%spawn: {task}");
+                executor().spawn_value(task);
+            })
+            .register_fn("#%await", |task: SteelVal, cont: SteelVal| {
+                info!("#%await: {task} {cont}");
+                executor().spawn(async move {
+                    let SteelVal::FutureV(fut) = task else {
+                        stop!(TypeMismatch => "Expected a future")
+                    };
+
+                    info!("Awaiting future...");
+                    let res = fut.unwrap().into_shared().await;
+                    let res = res?;
+
+                    info!("Calling continuation with result: {res:?}");
+                    crate::with_engine_mut(|engine| {
+                        engine.call_function_with_args(cont, vec![res])
+                    })?;
+
+                    Ok(())
+                });
+            });
 
         engine.register_module(module);
 
@@ -34,14 +57,6 @@ pub fn init() -> crate::Result<()> {
 #[derive(Clone)]
 pub struct Executor(Rc<RefCell<LocalExecutor<'static>>>);
 
-impl Deref for Executor {
-    type Target = Rc<RefCell<LocalExecutor<'static>>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 impl Custom for Executor {}
 
 impl Executor {
@@ -49,61 +64,69 @@ impl Executor {
         Executor(Rc::new(RefCell::new(LocalExecutor::new())))
     }
 
-    pub fn spawn(&self, task: SteelVal) {
+    pub fn unwrap(self) -> Rc<RefCell<LocalExecutor<'static>>> {
+        self.0
+    }
+
+    pub async fn tick(&self) {
+        self.0.borrow().tick().await
+    }
+
+    pub fn spawn<F, T>(&self, fut: F)
+    where
+        F: Future<Output = Result<T>> + 'static,
+        T: 'static,
+    {
+        self.0
+            .borrow()
+            .spawn(async move { handle_error(fut.await) })
+            .detach()
+    }
+
+    pub fn spawn_value(&self, task: SteelVal) {
         match task {
             SteelVal::FutureV(fut) => {
                 info!("Spawning future");
-                self.0.borrow().spawn(async move {
-                    info!("Running future");
-                    handle_error(fut.unwrap().into_shared().await);
-                })
+                self.spawn(fut.unwrap().into_shared())
             }
             SteelVal::SymbolV(sym) | SteelVal::StringV(sym) => {
                 info!("Spawning script: {sym}");
-                self.0.borrow().spawn(async move {
+                self.spawn(async move {
                     let name = sym.as_str();
                     info!("Running script: {name}");
-                    handle_error_with(|| {
-                        let res = crate::scripts::run(name);
-                        if let Err(e) = &res {
-                            let src = crate::scripts::source(name)?;
-                            error!("{}", e.emit_result_to_string(sym.as_str(), &src));
-                        }
-                        Ok(())
-                    });
+                    crate::scripts::run(name)
                 })
             }
             SteelVal::ListV(_) => {
                 info!("Spawning form {task}");
-                self.0.borrow().spawn(async move {
-                    handle_error(crate::with_engine_mut(|engine| {
+                self.spawn(async move {
+                    crate::with_engine_mut(|engine| {
                         info!("Running form {task}");
                         engine.run(format!("({task})"))
-                    }));
+                    })
                 })
             }
             _ => match Program::from_steelval(&task) {
                 Ok(prog) => {
                     info!("Spawning program {task}");
-                    self.0.borrow().spawn(async move {
+                    self.spawn(async move {
                         crate::with_engine_mut(|engine| {
                             info!("Running program {task:?}");
-                            handle_error(engine.run_raw_program(prog.unwrap()))
+                            engine.run_raw_program(prog.unwrap())
                         })
                     })
                 }
                 Err(_) => {
                     info!("Spawning task {task}");
-                    self.0.borrow().spawn(async move {
-                        handle_error(crate::with_engine_mut(|engine| {
+                    self.spawn(async move {
+                        crate::with_engine_mut(|engine| {
                             info!("Running task {task:?}");
                             engine.call_function_with_args(task, vec![])
-                        }))
+                        })
                     })
                 }
             },
         }
-        .detach();
     }
 }
 
@@ -111,11 +134,11 @@ pub fn executor() -> Executor {
     EXECUTOR.with(Clone::clone)
 }
 
-pub fn run() -> crate::Result<()> {
+pub fn run() {
     let exe = executor();
+    let exe = exe.unwrap();
     let exe = exe.borrow();
     while !exe.is_empty() {
         block_on(exe.tick());
     }
-    Ok(())
 }
