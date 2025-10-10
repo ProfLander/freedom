@@ -45,17 +45,6 @@ pub fn module() -> BuiltInModule {
     module
 }
 
-fn winit_send(event: UserEvent) -> Result<SteelVal> {
-    PROXY.with(|proxy| {
-        proxy
-            .get()
-            .ok_or_else(throw!(Generic => "EventLoopProxy accessed before initialization"))?
-            .send_event(event)
-            .or_else(|e| steelerr!(Generic => e))
-    })?;
-    Ok(SteelVal::Void)
-}
-
 fn winit(args: &[SteelVal]) -> Result<SteelVal> {
     let mut app = App::from_steelval(&SteelVal::ListV(args.into_iter().collect()))?;
 
@@ -76,4 +65,15 @@ fn winit(args: &[SteelVal]) -> Result<SteelVal> {
 
         Ok(SteelVal::Void)
     }))
+}
+
+fn winit_send(event: UserEvent) -> Result<SteelVal> {
+    PROXY.with(|proxy| {
+        proxy
+            .get()
+            .ok_or_else(throw!(Generic => "EventLoopProxy accessed before initialization"))?
+            .send_event(event)
+            .or_else(|e| steelerr!(Generic => e))
+    })?;
+    Ok(SteelVal::Void)
 }

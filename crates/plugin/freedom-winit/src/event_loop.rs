@@ -8,7 +8,7 @@ use freedom_scheme::steel::{
 };
 use winit::{event_loop::ActiveEventLoop, window::WindowAttributes};
 
-use crate::{from_steelval::WinitFromSteelVal, window::FreedomWindow};
+use crate::{from_steelval::WinitFromSteelVal, window::Window};
 
 #[derive(Clone)]
 pub struct EventLoop(Arc<Mutex<Vec<Box<dyn FnOnce(&ActiveEventLoop) + Send>>>>);
@@ -36,7 +36,7 @@ impl EventLoop {
                             tx.send_blocking(
                                 event_loop
                                     .create_window(attributes)
-                                    .and_then(|t| Ok(FreedomWindow(t)))
+                                    .and_then(|t| Ok(Window(t)))
                                     .unwrap(),
                             )
                             .unwrap();

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use freedom_scheme::steel::{SteelErr, SteelVal};
+use freedom_scheme::steel::{SteelErr, SteelVal, stop};
 use winit::{
     dpi::{Position, Size},
     window::{Cursor, Fullscreen, Icon, Theme, WindowAttributes, WindowButtons, WindowLevel},
@@ -15,19 +15,28 @@ where
     T: WinitFromSteelVal,
 {
     fn from_steelval(val: SteelVal) -> Result<Self, SteelErr> {
-        todo!()
+        match val {
+            SteelVal::BoolV(false) => Ok(None),
+            _ => Ok(Some(T::from_steelval(val)?)),
+        }
     }
 }
 
 impl WinitFromSteelVal for bool {
     fn from_steelval(val: SteelVal) -> Result<Self, SteelErr> {
-        todo!()
+        let SteelVal::BoolV(b) = val else {
+            stop!(TypeMismatch => "Expected a boolean, got {}", val)
+        };
+        Ok(b)
     }
 }
 
 impl WinitFromSteelVal for String {
     fn from_steelval(val: SteelVal) -> Result<Self, SteelErr> {
-        todo!()
+        let SteelVal::StringV(str) = val else {
+            stop!(TypeMismatch => "Expected a string, got {}", val)
+        };
+        Ok(str.to_string())
     }
 }
 

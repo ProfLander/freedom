@@ -3,13 +3,11 @@ use freedom_scheme::steel::{
     rvals::Custom,
     steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
 };
-use winit::window::Window;
-
 use crate::into_steelval::WinitIntoSteelVal;
 
-pub struct FreedomWindow(pub Window);
+pub struct Window(pub winit::window::Window);
 
-impl Custom for FreedomWindow {}
+impl Custom for Window {}
 
 macro_rules! impl_arity_0_inner {
     ($ident:ident) => {
@@ -37,7 +35,7 @@ macro_rules! register {
     };
 }
 
-impl FreedomWindow {
+impl Window {
     pub fn register_type(module: &mut BuiltInModule) {
         register!(module {
             id: "Window-id",
@@ -139,8 +137,8 @@ impl FreedomWindow {
     }
 }
 
-impl WinitIntoSteelVal for Window {
+impl WinitIntoSteelVal for winit::window::Window {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
-        freedom_scheme::steel::rvals::IntoSteelVal::into_steelval(FreedomWindow(self))
+        freedom_scheme::steel::rvals::IntoSteelVal::into_steelval(Window(self))
     }
 }

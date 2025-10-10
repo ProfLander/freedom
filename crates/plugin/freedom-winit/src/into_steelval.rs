@@ -1,24 +1,15 @@
 use std::error::Error;
 
-use freedom_scheme::{
-    steel::{
-        SteelErr, SteelVal, list,
-        rerrs::ErrorKind,
-        rvals::IntoSteelVal,
-    },
-};
+use freedom_scheme::steel::{SteelErr, SteelVal, list, rerrs::ErrorKind, rvals::IntoSteelVal};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
     event::{
-        DeviceEvent, DeviceId, ElementState, Force, Ime, InnerSizeWriter, KeyEvent, Modifiers,
-        MouseButton, MouseScrollDelta, RawKeyEvent, StartCause, Touch, TouchPhase, WindowEvent,
+        DeviceEvent, ElementState, Force, Ime, KeyEvent, MouseButton, MouseScrollDelta,
+        RawKeyEvent, StartCause, Touch, TouchPhase, WindowEvent,
     },
-    event_loop::AsyncRequestSerial,
     keyboard::{Key, KeyCode, KeyLocation, NamedKey, NativeKey, NativeKeyCode, PhysicalKey},
-    monitor::{MonitorHandle, VideoModeHandle},
-    window::{ActivationToken, Fullscreen, Theme, WindowButtons, WindowId},
+    window::{Fullscreen, Theme, WindowButtons, WindowId},
 };
-
 pub trait WinitIntoSteelVal {
     fn into_steelval(self) -> Result<SteelVal, SteelErr>;
 }
@@ -69,7 +60,7 @@ impl<T: WinitIntoSteelVal, E: Error> WinitIntoSteelVal for Result<T, E> {
 }
 
 macro_rules! opaque_wrappers {
-    ($($name:ident($inner:ident);)+) => {
+    ($($name:ident($inner:path);)+) => {
         $(
             #[derive(Clone, PartialEq)]
             pub struct $name($inner);
@@ -106,13 +97,13 @@ macro_rules! opaque_wrappers {
 }
 
 opaque_wrappers! {
-    FreedomDeviceId(DeviceId);
-    FreedomModifiers(Modifiers);
-    FreedomActivationToken(ActivationToken);
-    FreedomAsyncRequestSerial(AsyncRequestSerial);
-    FreedomInnerSizeWriter(InnerSizeWriter);
-    FreedomVideoModeHandle(VideoModeHandle);
-    FreedomMonitorHandle(MonitorHandle);
+    DeviceId(winit::event::DeviceId);
+    Modifiers(winit::event::Modifiers);
+    ActivationToken(winit::window::ActivationToken);
+    AsyncRequestSerial(winit::event_loop::AsyncRequestSerial);
+    InnerSizeWriter(winit::event::InnerSizeWriter);
+    VideoModeHandle(winit::monitor::VideoModeHandle);
+    MonitorHandle(winit::monitor::MonitorHandle);
 }
 
 impl WinitIntoSteelVal for Fullscreen {

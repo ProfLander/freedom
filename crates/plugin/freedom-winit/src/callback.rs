@@ -25,7 +25,7 @@ impl FromSteelVal for Callback {
         };
 
         if quote.as_str() != "lambda" {
-            stop!(UnexpectedToken => "Expected a quoted lambda, got: {}", val)
+            stop!(UnexpectedToken => "Expected 'lambda, got: {}", val)
         }
 
         let mut exps = freedom_scheme::with_engine_mut(|engine| engine.run(format!("{}", val)))?;
