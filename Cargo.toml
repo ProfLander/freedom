@@ -1,26 +1,28 @@
 [workspace]
 resolver = "3"
 members = [
-    "core/freedom-async",
-    "core/freedom-fs",
-    "core/freedom-log",
-    "core/freedom-plugins",
-    "core/freedom-scheme",
-    "core/freedom-scripts",
+    "crates/core/freedom-async",
+    "crates/core/freedom-log",
+    "crates/core/freedom-plugins",
+    "crates/core/freedom-scheme",
+    "crates/core/freedom-scripts",
 
-    "plugin/freedom-winit",
-    "plugin/library",
+    "crates/library/freedom-fs",
 
-    "freedome",
+    "crates/freedom",
+
+    "crates/plugin/freedom-winit",
+    "crates/plugin/library",
 ]
 
 [workspace.dependencies]
-freedom-async = { path = "core/freedom-async" }
-freedom-fs = { path = "core/freedom-fs" }
-freedom-log = { path = "core/freedom-log" }
-freedom-plugins = { path = "core/freedom-plugins" }
-freedom-scheme = { path = "core/freedom-scheme" }
-freedom-scripts = { path = "core/freedom-scripts" }
+freedom-async = { path = "crates/core/freedom-async" }
+freedom-log = { path = "crates/core/freedom-log" }
+freedom-plugins = { path = "crates/core/freedom-plugins" }
+freedom-scheme = { path = "crates/core/freedom-scheme" }
+freedom-scripts = { path = "crates/core/freedom-scripts" }
+
+freedom-fs = { path = "crates/library/freedom-fs" }
 
 log = "0.4.28"
 

@@ -47,7 +47,7 @@ impl Scripts {
         self.scripts.borrow_mut().insert(name.into(), script);
     }
 
-    pub fn watch<P: AsRef<Path>>(&self, path: &P) -> Result<()> {
+    pub fn watch<P: AsRef<OsStr>>(&self, path: &P) -> Result<()> {
         let path = path.as_ref();
         let debouncer = freedom_fs::watch(
             path,
@@ -86,7 +86,7 @@ impl Scripts {
         .or_else(|e| steelerr!(Generic => e))?;
 
         self.watcher
-            .set((path.to_path_buf(), debouncer))
+            .set((PathBuf::from(path), debouncer))
             .or_else(|_| steelerr!(Generic => "Watcher has already been set"))?;
 
         Ok(())

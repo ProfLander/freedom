@@ -68,6 +68,7 @@ pub fn module() -> Result<BuiltInModule> {
 }
 
 pub fn run() {
+    info!("Running executor");
     let exe = executor();
     let exe = exe.unwrap();
     let exe = exe.borrow();
