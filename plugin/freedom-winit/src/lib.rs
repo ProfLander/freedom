@@ -1,4 +1,4 @@
-use freedom_async::{Executor, smol::block_on};
+use freedom_async::{executor::Executor, smol::block_on};
 use freedom_scheme::{
     Result,
     steel::{

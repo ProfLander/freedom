@@ -1,5 +1,3 @@
-pub mod dylib;
-
 use std::path::{Path, PathBuf};
 
 use libloading::Symbol;
@@ -10,7 +8,7 @@ use freedom_scheme::{
     steel::{rvals::Custom, steel_vm::builtin::BuiltInModule, steelerr},
 };
 
-use dylib::Dylib;
+use crate::dylib::Dylib;
 
 // Interface to a reloadable rust dylib exposing a Steel module
 pub struct Plugin {
@@ -57,11 +55,9 @@ impl Plugin {
         info!("Constructing module...");
         let module = module();
 
- 
- 
         // Inject dylib into module for lifetime control
         drop(self.loaded.replace((module, lib)));
 
-                Ok(())
+        Ok(())
     }
 }

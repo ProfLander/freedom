@@ -14,49 +14,53 @@ use freedom_scheme::{
 pub fn init() {
     init_local();
     freedom_scheme::with_engine_mut(|engine| {
-        let mut module = BuiltInModule::new("freedom/log");
-        module.register_native_fn(
-            "trace!",
-            |args: &[SteelVal]| {
-                trace!("{}", args.iter().map(ToString::to_string).join(" "));
-                Ok(SteelVal::Void)
-            },
-            Arity::AtLeast(1),
-        );
-        module.register_native_fn(
-            "info!",
-            |args: &[SteelVal]| {
-                info!("{}", args.iter().map(ToString::to_string).join(" "));
-                Ok(SteelVal::Void)
-            },
-            Arity::AtLeast(1),
-        );
-        module.register_native_fn(
-            "debug!",
-            |args: &[SteelVal]| {
-                debug!("{}", args.iter().map(ToString::to_string).join(" "));
-                Ok(SteelVal::Void)
-            },
-            Arity::AtLeast(1),
-        );
-        module.register_native_fn(
-            "warn!",
-            |args: &[SteelVal]| {
-                warn!("{}", args.iter().map(ToString::to_string).join(" "));
-                Ok(SteelVal::Void)
-            },
-            Arity::AtLeast(1),
-        );
-        module.register_native_fn(
-            "error!",
-            |args: &[SteelVal]| {
-                error!("{}", args.iter().map(ToString::to_string).join(" "));
-                Ok(SteelVal::Void)
-            },
-            Arity::AtLeast(1),
-        );
-        engine.register_module(module);
+        engine.register_module(module());
     });
+}
+
+pub fn module() -> BuiltInModule {
+    let mut module = BuiltInModule::new("freedom/log");
+    module.register_native_fn(
+        "trace!",
+        |args: &[SteelVal]| {
+            trace!("{}", args.iter().map(ToString::to_string).join(" "));
+            Ok(SteelVal::Void)
+        },
+        Arity::AtLeast(1),
+    );
+    module.register_native_fn(
+        "info!",
+        |args: &[SteelVal]| {
+            info!("{}", args.iter().map(ToString::to_string).join(" "));
+            Ok(SteelVal::Void)
+        },
+        Arity::AtLeast(1),
+    );
+    module.register_native_fn(
+        "debug!",
+        |args: &[SteelVal]| {
+            debug!("{}", args.iter().map(ToString::to_string).join(" "));
+            Ok(SteelVal::Void)
+        },
+        Arity::AtLeast(1),
+    );
+    module.register_native_fn(
+        "warn!",
+        |args: &[SteelVal]| {
+            warn!("{}", args.iter().map(ToString::to_string).join(" "));
+            Ok(SteelVal::Void)
+        },
+        Arity::AtLeast(1),
+    );
+    module.register_native_fn(
+        "error!",
+        |args: &[SteelVal]| {
+            error!("{}", args.iter().map(ToString::to_string).join(" "));
+            Ok(SteelVal::Void)
+        },
+        Arity::AtLeast(1),
+    );
+    module
 }
 
 pub fn init_local() {

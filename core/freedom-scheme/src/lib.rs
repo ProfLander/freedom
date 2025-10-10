@@ -1,33 +1,36 @@
-pub use steel;
+pub mod engine;
+pub mod program;
 
-use std::{cell::RefCell, ops::Deref, rc::Rc};
+pub use steel;
 
 use log::info;
 use steel::{
-    SteelErr, SteelVal,
-    compiler::program::RawProgramWithSymbols,
-    gc::Gc,
-    rvals::{Custom, FutureResult, IntoSteelVal},
-    steel_vm::{engine::Engine as SteelEngine, register_fn::RegisterFn},
+    gc::Gc, rvals::{FutureResult, IntoSteelVal}, steel_vm::{builtin::BuiltInModule, engine::Engine as SteelEngine, register_fn::RegisterFn}, SteelErr, SteelVal
 };
+
+use crate::{engine::Engine, program::Program};
 
 pub type Result<T> = std::result::Result<T, SteelErr>;
 
 thread_local! {
     static ENGINE: Engine = {
         info!("Constructing new Engine on {:?}", std::thread::current().id());
-        let engine = Engine(Rc::new(RefCell::new(SteelEngine::new())));
-        engine.borrow_mut()
-            .register_fn(
-                "#%compile",
-                |src: SteelVal| SteelVal::FutureV(Gc::new(FutureResult::new(Box::pin(async move {
-                    crate::with_engine_mut(|engine| {
-                        Program::new(engine.emit_raw_program_no_path(src.to_string())?).into_steelval()
-                    })
-                }))))
-        );
+        let engine = Engine::new();
+        engine.borrow_mut().register_module(module());
         engine
     };
+}
+
+fn module() -> BuiltInModule {
+    let mut module = BuiltInModule::new("freedom/scheme");
+    module.register_fn("#%compile", |src: SteelVal| {
+        SteelVal::FutureV(Gc::new(FutureResult::new(Box::pin(async move {
+            crate::with_engine_mut(|engine| {
+                Program::new(engine.emit_raw_program_no_path(src.to_string())?).into_steelval()
+            })
+        }))))
+    });
+    module
 }
 
 pub fn with_engine<T>(f: impl FnOnce(&SteelEngine) -> T) -> T {
@@ -37,34 +40,6 @@ pub fn with_engine<T>(f: impl FnOnce(&SteelEngine) -> T) -> T {
 pub fn with_engine_mut<T>(f: impl FnOnce(&mut SteelEngine) -> T) -> T {
     ENGINE.with(|engine| f(&mut engine.borrow_mut()))
 }
-
-#[derive(Clone)]
-pub struct Engine(Rc<RefCell<SteelEngine>>);
-
-impl Deref for Engine {
-    type Target = RefCell<SteelEngine>;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.as_ref()
-    }
-}
-
-impl Custom for Engine {}
-
-#[derive(Clone)]
-pub struct Program(RawProgramWithSymbols);
-
-impl Program {
-    pub fn new(prog: RawProgramWithSymbols) -> Self {
-        Program(prog)
-    }
-
-    pub fn unwrap(self) -> RawProgramWithSymbols {
-        self.0
-    }
-}
-
-impl Custom for Program {}
 
 #[macro_export]
 macro_rules! err {

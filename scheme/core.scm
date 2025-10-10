@@ -1,4 +1,8 @@
-(provide script compile)
+(provide script compile #%require-plugin)
+
+(require-builtin freedom/scheme)
+(require-builtin freedom/scripts)
+(require-builtin freedom/plugins)
 
 (define-syntax script
   (syntax-rules []

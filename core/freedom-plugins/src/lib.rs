@@ -1,37 +1,26 @@
+pub mod dylib;
 pub mod plugin;
+pub mod plugins;
 
-use std::{
-    cell::{OnceCell, RefCell},
-    collections::BTreeMap,
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::{cell::OnceCell, ffi::OsStr, path::Path};
 
 use freedom_scheme::{
     Result,
-    steel::{
-        steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
-        steelerr, throw,
-    },
+    steel::steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
 };
-use freedom_fs::{
-    Watcher,
-    notify_debouncer_full::notify::{EventKind, RecursiveMode},
-};
-use freedom_log::{handle_error, info};
 
-use crate::plugin::Plugin;
+use crate::{plugin::Plugin, plugins::Plugins};
 
 thread_local! {
     static PLUGINS: OnceCell<Plugins> = OnceCell::new();
 }
 
-pub fn init(dir: &str) -> Result<()> {
+pub fn init<P: AsRef<OsStr>>(dir: &P) -> Result<()> {
     // Construct plugins
-    let plugins = Plugins::new(&Path::new(dir))?;
+    let plugins = Plugins::new(Path::new(dir))?;
 
     freedom_scheme::with_engine_mut(|engine| {
-        engine.register_fn("#%get-plugin", get_plugin);
+        engine.register_module(module());
         Ok(()) as Result<()>
     })?;
 
@@ -44,10 +33,16 @@ pub fn init(dir: &str) -> Result<()> {
     Ok(())
 }
 
+fn module() -> BuiltInModule {
+    let mut module = BuiltInModule::new("freedom/plugins");
+    module.register_fn("#%get-plugin", get_plugin);
+    module
+}
+
 pub fn get_plugin(name: String) -> Result<BuiltInModule> {
     PLUGINS.with(|plugins| {
         let plugins = plugins.get().unwrap();
-        let mut path = plugins.search_path.clone();
+        let mut path = plugins.search_path().to_path_buf();
         let fname = libloading::library_filename(&name);
         path.push(fname);
 
@@ -58,63 +53,4 @@ pub fn get_plugin(name: String) -> Result<BuiltInModule> {
 
         Ok(plugin.module().unwrap().clone())
     })
-}
-
-// Thread-local collection of plugins
-pub struct Plugins {
-    search_path: PathBuf,
-    pub(crate) plugins: RefCell<BTreeMap<String, Plugin>>,
-    _watcher: Watcher,
-}
-
-impl Plugins {
-    pub fn new(search_path: &Path) -> Result<Self> {
-        let search_path = search_path.to_path_buf();
-        let watcher = Self::watch(search_path.clone())?;
-
-        Ok(Plugins {
-            search_path,
-            plugins: RefCell::new(Default::default()),
-            _watcher: watcher,
-        })
-    }
-
-    pub fn watch<P>(path: P) -> Result<Watcher>
-    where
-        P: AsRef<Path> + 'static,
-    {
-        let path = path.as_ref().to_path_buf();
-        let debouncer = freedom_fs::watch(
-            path.clone(),
-            Duration::from_secs_f32(0.1),
-            None,
-            RecursiveMode::NonRecursive,
-            move |event| {
-                handle_error(match event.event.kind {
-                    EventKind::Modify(_) => PLUGINS.with(move |plugins| {
-                        for key in &event.paths {
-                            for (_, plugin) in plugins
-                                .get()
-                                .ok_or_else(throw!(Generic => "Plugins have not been initialized"))?
-                                .plugins
-                                .borrow_mut()
-                                .iter_mut()
-                            {
-                                if key.ends_with(&plugin.path()) {
-                                    info!("Reloading {:?}", plugin.path());
-                                    plugin.load()?;
-                                }
-                            }
-                        }
-
-                        Ok(())
-                    }),
-                    _ => Ok(()),
-                })
-            },
-        )
-        .or_else(|e| steelerr!(Io => e))?;
-
-        Ok(debouncer)
-    }
 }

@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use freedom_async::smol::block_on;
 use freedom_log::{handle_error_with, info};
 
@@ -12,10 +10,10 @@ fn main() {
         freedom_log::init();
 
         // Setup plugins
-        freedom_plugins::init(PLUGIN_DIR)?;
+        freedom_plugins::init(&PLUGIN_DIR)?;
 
         // Setup scripts
-        freedom_scripts::init(&Path::new("scheme"))?;
+        freedom_scripts::init(&"scheme")?;
 
         // Setup async
         freedom_async::init()?;
