@@ -1,8 +1,13 @@
 use freedom_async::{executor::Executor, smol::block_on};
-use freedom_log::handle_error;
+use freedom_log::{handle_error, handle_error_with};
 use freedom_scheme::{
     Result,
-    steel::{SteelVal, primitives::lists::plist_get, rvals::FromSteelVal, steelerr, stop},
+    steel::{
+        SteelVal,
+        primitives::lists::plist_get,
+        rvals::{FromSteelVal, IntoSteelVal},
+        steelerr, stop,
+    },
 };
 
 use winit::{
@@ -12,22 +17,37 @@ use winit::{
     window::WindowId,
 };
 
+use crate::{
+    UserEvent, callback::Callback, event_loop::EventLoop, into_steelval::WinitIntoSteelVal,
+};
+
 pub struct App {
     executor: Executor,
-    resumed: SteelVal,
-    suspended: SteelVal,
-    new_events: SteelVal,
-    device_event: SteelVal,
-    window_event: SteelVal,
-    about_to_wait: SteelVal,
-    exiting: SteelVal,
-    memory_warning: SteelVal,
+    resumed: Callback,
+    suspended: Callback,
+    new_events: Callback,
+    device_event: Callback,
+    window_event: Callback,
+    about_to_wait: Callback,
+    exiting: Callback,
+    memory_warning: Callback,
 }
 
 impl App {
-    fn callback(&self, callback: SteelVal, args: Vec<SteelVal>) -> Result<()> {
+    fn callback(
+        &self,
+        event_loop: &ActiveEventLoop,
+        callback: Callback,
+        mut args: Vec<SteelVal>,
+    ) -> Result<()> {
+        let callback = callback.into_steelval()?;
         if !matches!(callback, SteelVal::Void) {
-            self.executor.spawn_value(callback);
+            let el = EventLoop::new();
+            args.insert(0, el.clone().into_steelval()?);
+            freedom_scheme::with_engine_mut(|engine| {
+                engine.call_function_with_args(callback, args)
+            })?;
+            el.apply(event_loop);
         }
         Ok(())
     }
@@ -36,7 +56,7 @@ impl App {
 impl FromSteelVal for App {
     fn from_steelval(val: &SteelVal) -> freedom_scheme::steel::rvals::Result<Self> {
         let SteelVal::ListV(args) = val else {
-            stop!(TypeMismatch => "Expected a vector, got: {val}");
+            stop!(TypeMismatch => "Expected a vector, got: {}", val);
         };
 
         let mut args = args.iter().collect::<Vec<_>>();
@@ -77,29 +97,35 @@ impl FromSteelVal for App {
 
         Ok(App {
             executor,
-            resumed,
-            suspended,
-            new_events,
-            device_event,
-            window_event,
-            about_to_wait,
-            exiting,
-            memory_warning,
+            resumed: Callback::from_steelval(&resumed)?,
+            suspended: Callback::from_steelval(&suspended)?,
+            new_events: Callback::from_steelval(&new_events)?,
+            device_event: Callback::from_steelval(&device_event)?,
+            window_event: Callback::from_steelval(&window_event)?,
+            about_to_wait: Callback::from_steelval(&about_to_wait)?,
+            exiting: Callback::from_steelval(&exiting)?,
+            memory_warning: Callback::from_steelval(&memory_warning)?,
         })
     }
 }
 
-impl ApplicationHandler for App {
+impl ApplicationHandler<UserEvent> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        handle_error(self.callback(self.resumed.clone(), vec![]));
+        handle_error(self.callback(event_loop, self.resumed.clone(), vec![]));
     }
 
     fn suspended(&mut self, event_loop: &ActiveEventLoop) {
-        handle_error(self.callback(self.suspended.clone(), vec![]));
+        handle_error(self.callback(event_loop, self.suspended.clone(), vec![]));
     }
 
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: winit::event::StartCause) {
-        handle_error(self.callback(self.new_events.clone(), vec![]));
+        handle_error_with(|| {
+            self.callback(
+                event_loop,
+                self.new_events.clone(),
+                vec![cause.into_steelval()?],
+            )
+        });
     }
 
     fn device_event(
@@ -108,7 +134,13 @@ impl ApplicationHandler for App {
         device_id: DeviceId,
         event: winit::event::DeviceEvent,
     ) {
-        handle_error(self.callback(self.device_event.clone(), vec![]));
+        handle_error_with(|| {
+            self.callback(
+                event_loop,
+                self.device_event.clone(),
+                vec![device_id.into_steelval()?, event.into_steelval()?],
+            )
+        });
     }
 
     fn window_event(
@@ -117,23 +149,32 @@ impl ApplicationHandler for App {
         window_id: WindowId,
         event: WindowEvent,
     ) {
-        handle_error(self.callback(self.window_event.clone(), vec![]));
+        handle_error_with(|| {
+            self.callback(
+                event_loop,
+                self.window_event.clone(),
+                vec![window_id.into_steelval()?, event.into_steelval()?],
+            )
+        });
     }
 
-    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: ()) {
-        let _ = (event_loop, event);
+    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: UserEvent) {
+        handle_error_with(|| {
+            let callback = Callback::from_steelval(&event)?;
+            self.callback(event_loop, callback, vec![])
+        })
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-        handle_error(self.callback(self.about_to_wait.clone(), vec![]));
+        handle_error(self.callback(event_loop, self.about_to_wait.clone(), vec![]));
         block_on(self.executor.tick());
     }
 
     fn exiting(&mut self, event_loop: &ActiveEventLoop) {
-        handle_error(self.callback(self.exiting.clone(), vec![]));
+        handle_error(self.callback(event_loop, self.exiting.clone(), vec![]));
     }
 
     fn memory_warning(&mut self, event_loop: &ActiveEventLoop) {
-        handle_error(self.callback(self.memory_warning.clone(), vec![]));
+        handle_error(self.callback(event_loop, self.memory_warning.clone(), vec![]));
     }
 }
