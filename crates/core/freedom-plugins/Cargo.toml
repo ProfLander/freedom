@@ -3,9 +3,6 @@ name = "freedom-plugins"
 version = "1.0.0"
 edition = "2024"
 
-[lib]
-crate-type = ["rlib"]
-
 [dependencies]
 freedom-scheme = { workspace = true }
 freedom-log = { workspace = true }

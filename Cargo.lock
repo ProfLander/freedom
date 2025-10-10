@@ -941,6 +941,7 @@ name = "freedom"
 version = "1.0.0"
 dependencies = [
  "freedom-async",
+ "freedom-build",
  "freedom-log",
  "freedom-plugins",
  "freedom-scheme",
@@ -955,6 +956,10 @@ dependencies = [
  "freedom-scheme",
  "smol",
 ]
+
+[[package]]
+name = "freedom-build"
+version = "1.0.0"
 
 [[package]]
 name = "freedom-fs"

@@ -7,6 +7,7 @@ members = [
     "crates/core/freedom-scheme",
     "crates/core/freedom-scripts",
 
+    "crates/library/freedom-build",
     "crates/library/freedom-fs",
 
     "crates/freedom",
@@ -22,6 +23,7 @@ freedom-plugins = { path = "crates/core/freedom-plugins" }
 freedom-scheme = { path = "crates/core/freedom-scheme" }
 freedom-scripts = { path = "crates/core/freedom-scripts" }
 
+freedom-build = { path = "crates/library/freedom-build" }
 freedom-fs = { path = "crates/library/freedom-fs" }
 
 log = "0.4.28"
