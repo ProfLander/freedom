@@ -5,7 +5,10 @@ pub use steel;
 
 use log::info;
 use steel::{
-    gc::Gc, rvals::{FutureResult, IntoSteelVal}, steel_vm::{builtin::BuiltInModule, engine::Engine as SteelEngine, register_fn::RegisterFn}, SteelErr, SteelVal
+    SteelErr, SteelVal,
+    gc::Gc,
+    rvals::{FutureResult, IntoSteelVal},
+    steel_vm::{builtin::BuiltInModule, engine::Engine as SteelEngine, register_fn::RegisterFn},
 };
 
 use crate::{engine::Engine, program::Program};
@@ -39,6 +42,14 @@ pub fn with_engine<T>(f: impl FnOnce(&SteelEngine) -> T) -> T {
 
 pub fn with_engine_mut<T>(f: impl FnOnce(&mut SteelEngine) -> T) -> T {
     ENGINE.with(|engine| f(&mut engine.borrow_mut()))
+}
+
+pub fn steel_future<F>(fut: F) -> SteelVal
+where
+    F: Future<Output = Result<SteelVal>> + 'static,
+{
+    // Return a future to run the winit event loop
+    SteelVal::FutureV(Gc::new(FutureResult::new(Box::pin(fut))))
 }
 
 #[macro_export]
