@@ -1,0 +1,12 @@
+[package]
+name = "freedom-scripts"
+version = "1.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+freedom-fs = { workspace = true }
+freedom-log = { workspace = true }
+freedom-scheme = { workspace = true }

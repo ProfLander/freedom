@@ -6,25 +6,49 @@ use std::{
     time::Duration,
 };
 
-use log::info;
-use notify_debouncer_full::{
+use freedom_scheme::{
+    Program, Result,
+    steel::{
+        compiler::program::RawProgramWithSymbols, steel_vm::register_fn::RegisterFn, steelerr,
+        throw,
+    },
+};
+use freedom_fs::notify_debouncer_full::{
     Debouncer, FileIdMap,
     notify::{EventKind, ReadDirectoryChangesWatcher, RecursiveMode},
 };
-use steel::{SteelVal, compiler::program::RawProgramWithSymbols, steelerr, throw};
-
-use crate::{ENGINE, Result, handle_error_with};
+use freedom_log::{handle_error_with, info};
 
 thread_local! {
     static SCRIPTS: Scripts = Scripts::new();
 }
 
 pub fn init(path: &Path) -> Result<()> {
-    SCRIPTS.with(|scripts| scripts.watch(path))
+    SCRIPTS.with(|scripts| scripts.watch(path))?;
+    freedom_scheme::with_engine_mut(|engine| {
+        engine.register_fn("#%get-script", get_script::<String>);
+    });
+    Ok(())
 }
 
-pub fn run(name: &str) -> Result<Vec<SteelVal>> {
-    SCRIPTS.with(|scripts| scripts.run(name))
+pub async fn get_script<P: AsRef<str>>(name: P) -> Result<Program> {
+    let name = name.as_ref();
+    let prog = SCRIPTS.with(|scripts| {
+        let (_, prog) = if let Some(entry) = scripts.scripts.borrow().get(name) {
+            entry.clone()
+        } else {
+            let script = scripts.load_script(&Path::new(name))?;
+
+            scripts
+                .scripts
+                .borrow_mut()
+                .insert(name.to_string(), script.clone());
+            script
+        };
+        Ok(Program::new(prog)) as Result<_>
+    })?;
+
+    Ok(prog)
 }
 
 pub fn source(name: &str) -> Result<Cow<'static, str>> {
@@ -45,7 +69,7 @@ impl Scripts {
     }
 
     pub fn watch(&self, path: &Path) -> Result<()> {
-        let debouncer = crate::fs::watch(
+        let debouncer = freedom_fs::watch(
             path,
             Duration::from_secs_f32(0.1),
             None,
@@ -104,7 +128,8 @@ impl Scripts {
 
         let src: Cow<'static, str> =
             Cow::Owned(std::fs::read_to_string(&path).or_else(|e| steelerr!(Generic => e))?);
-        let prog = ENGINE.with(|engine| engine.borrow_mut().emit_raw_program(src.clone(), path))?;
+        let prog =
+            freedom_scheme::with_engine_mut(|engine| engine.emit_raw_program(src.clone(), path))?;
         Ok((src, prog))
     }
 
@@ -115,21 +140,5 @@ impl Scripts {
             .get(name)
             .map(|(src, _)| src.clone())
             .ok_or_else(throw!(Generic => "No script with name: {}", name))
-    }
-
-    pub fn run<T: AsRef<str>>(&self, name: T) -> Result<Vec<SteelVal>> {
-        let name = name.as_ref();
-        let (_, prog) = if let Some(entry) = self.scripts.borrow().get(name) {
-            entry.clone()
-        } else {
-            let script = self.load_script(&Path::new(name))?;
-
-            self.scripts
-                .borrow_mut()
-                .insert(name.to_string(), script.clone());
-            script
-        };
-
-        ENGINE.with(|engine| engine.borrow_mut().run_raw_program(prog))
     }
 }

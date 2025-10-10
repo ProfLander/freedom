@@ -1,4 +1,8 @@
-(provide compile)
+(provide script compile)
+
+(define-syntax script
+  (syntax-rules []
+    [(_ name) (await (#%get-script (quote name)))]))
 
 (define-syntax compile
   (syntax-rules []

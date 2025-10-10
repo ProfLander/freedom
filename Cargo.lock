@@ -937,24 +937,69 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
-name = "freedom-core"
+name = "freedom-async"
+version = "1.0.0"
+dependencies = [
+ "freedom-log",
+ "freedom-scheme",
+ "smol",
+]
+
+[[package]]
+name = "freedom-fs"
+version = "1.0.0"
+dependencies = [
+ "freedom-async",
+ "freedom-log",
+ "notify-debouncer-full",
+ "steel-core",
+]
+
+[[package]]
+name = "freedom-log"
 version = "1.0.0"
 dependencies = [
  "env_logger",
- "libloading",
+ "freedom-scheme",
  "log",
- "notify-debouncer-full",
- "smol",
- "steel-core",
+]
+
+[[package]]
+name = "freedom-plugins"
+version = "1.0.0"
+dependencies = [
+ "freedom-fs",
+ "freedom-log",
+ "freedom-scheme",
+ "libloading",
  "tempfile",
  "uuid",
+]
+
+[[package]]
+name = "freedom-scheme"
+version = "1.0.0"
+dependencies = [
+ "log",
+ "steel-core",
+]
+
+[[package]]
+name = "freedom-scripts"
+version = "1.0.0"
+dependencies = [
+ "freedom-fs",
+ "freedom-log",
+ "freedom-scheme",
 ]
 
 [[package]]
 name = "freedom-winit"
 version = "1.0.0"
 dependencies = [
- "freedom-core",
+ "freedom-async",
+ "freedom-log",
+ "freedom-scheme",
  "winit",
 ]
 
@@ -962,7 +1007,11 @@ dependencies = [
 name = "freedome"
 version = "1.0.0"
 dependencies = [
- "freedom-core",
+ "freedom-async",
+ "freedom-log",
+ "freedom-plugins",
+ "freedom-scheme",
+ "freedom-scripts",
 ]
 
 [[package]]
@@ -1502,7 +1551,8 @@ checksum = "f9fbbcab51052fe104eb5e5d351cf728d30a5be1fe14d9be8a3b097481fb97de"
 name = "library"
 version = "1.0.0"
 dependencies = [
- "freedom-core",
+ "freedom-log",
+ "freedom-scheme",
 ]
 
 [[package]]

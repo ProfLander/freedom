@@ -1,14 +1,16 @@
+pub use notify_debouncer_full;
+
 use std::{path::Path, time::Duration};
 
-use log::info;
+use freedom_async::smol::channel::unbounded;
+use freedom_log::info;
 use notify_debouncer_full::{
     DebounceEventResult, DebouncedEvent, Debouncer, FileIdMap, RecommendedCache, new_debouncer_opt,
     notify::{Config, Error, ReadDirectoryChangesWatcher, RecursiveMode},
 };
-use smol::channel::unbounded;
 use steel::steelerr;
 
-use crate::{r#async::EXECUTOR, handle_error};
+use freedom_log::handle_error;
 
 pub type Watcher = Debouncer<ReadDirectoryChangesWatcher, FileIdMap>;
 
@@ -43,17 +45,15 @@ where
             .with_manual_polling(),
     )?;
 
-    EXECUTOR.with(|exe| {
-        exe.spawn::<_, ()>(async move {
-            loop {
-                let events = rx.recv().await;
-                let events = events.or_else(|e| steelerr!(Generic => e))?;
-                let events = events.or_else(|e| steelerr!(Generic => "{:?}", e))?;
-                for event in events {
-                    f(event);
-                }
+    freedom_async::executor().spawn::<_, ()>(async move {
+        loop {
+            let events = rx.recv().await;
+            let events = events.or_else(|e| steelerr!(Generic => e))?;
+            let events = events.or_else(|e| steelerr!(Generic => "{:?}", e))?;
+            for event in events {
+                f(event);
             }
-        })
+        }
     });
 
     // Add a path to be watched. All files and directories at that path and

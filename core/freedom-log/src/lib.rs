@@ -1,16 +1,19 @@
 pub use log::{Level, debug, error, info, log, trace, warn};
-use steel::{
-    SteelVal,
-    parser::ast::IteratorExtensions,
-    steel_vm::builtin::{Arity, BuiltInModule},
-    steelerr,
-};
 
-use crate::handle_error;
+use freedom_scheme::{
+    Result,
+    steel::{
+        SteelErr, SteelVal,
+        parser::ast::IteratorExtensions,
+        steel_vm::builtin::{Arity, BuiltInModule},
+        steelerr,
+    },
+    with_engine,
+};
 
 pub fn init() {
     init_local();
-    crate::with_engine_mut(|engine| {
+    freedom_scheme::with_engine_mut(|engine| {
         let mut module = BuiltInModule::new("freedom/log");
         module.register_native_fn(
             "trace!",
@@ -66,4 +69,57 @@ pub fn init_local() {
     let max_level = logger.filter();
     handle_error(log::set_boxed_logger(Box::new(logger)).or_else(|e| steelerr!(Generic => e)));
     log::set_max_level(max_level);
+}
+
+fn handle_error_impl(e: SteelErr) {
+    let default = || error!("{e}");
+
+    if let Some(span) = e.span() {
+        if let Some(source_id) = span.source_id() {
+            with_engine(|engine| {
+                if let Some(source_path) = engine.get_path_for_source_id(&source_id) {
+                    let Some(source_path) = source_path.to_str() else {
+                        error!("Failed to convert path into a string slice: {source_path:?}");
+                        return;
+                    };
+
+                    if let Some(source) = engine.get_source(&source_id) {
+                        error!("{}", e.emit_result_to_string(source_path, &source));
+                    } else {
+                        default()
+                    }
+                } else {
+                    default()
+                }
+            })
+        } else {
+            default()
+        }
+    } else {
+        default()
+    }
+}
+
+pub fn handle_error<T>(res: Result<T>) {
+    if let Err(e) = res {
+        handle_error_impl(e);
+    }
+}
+
+pub fn handle_error_with<F, T>(f: F)
+where
+    F: FnOnce() -> Result<T>,
+{
+    if let Err(e) = f() {
+        handle_error_impl(e);
+    }
+}
+
+pub async fn handle_error_async<F, T>(res: F)
+where
+    F: Future<Output = Result<T>>,
+{
+    if let Err(e) = res.await {
+        handle_error_impl(e);
+    }
 }

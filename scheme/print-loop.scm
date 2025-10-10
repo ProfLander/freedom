@@ -1,8 +1,8 @@
-(require "async.scm")
 (require "core.scm")
+(require "async.scm")
 
 (#%require-plugin library (only-in print-hello))
 
 (displayln "Print loop")
 (print-hello)
-(spawn 'print-loop)
+(spawn (script print-loop))

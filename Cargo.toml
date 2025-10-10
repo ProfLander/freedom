@@ -1,15 +1,28 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/freedom-core",
-    "crates/freedom-winit",
-    "crates/library",
-    "freedome"
+    "core/freedom-async",
+    "core/freedom-fs",
+    "core/freedom-log",
+    "core/freedom-plugins",
+    "core/freedom-scheme",
+    "core/freedom-scripts",
+
+    "plugin/freedom-winit",
+    "plugin/library",
+
+    "freedome",
 ]
 
 [workspace.dependencies]
-freedom-core = { path = "crates/freedom-core" }
-freedom-winit = { path = "crates/freedom-winit" }
+freedom-async = { path = "core/freedom-async" }
+freedom-fs = { path = "core/freedom-fs" }
+freedom-log = { path = "core/freedom-log" }
+freedom-plugins = { path = "core/freedom-plugins" }
+freedom-scheme = { path = "core/freedom-scheme" }
+freedom-scripts = { path = "core/freedom-scripts" }
+
+log = "0.4.28"
 
 steel-core = { git = "https://github.com/mattwparas/steel", rev = "6bb6f17be7cb0ce932816a697cfafc669490d489", features = [
     "markdown",        # Augment help functionality with markdown rendering

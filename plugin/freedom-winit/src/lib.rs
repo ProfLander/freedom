@@ -1,8 +1,16 @@
-use freedom_core::{
-    r#async::Executor, handle_error, logging::info, smol::block_on, steel::{
-        gc::Gc, primitives::lists::plist_get, rvals::{FromSteelVal, FutureResult}, steel_vm::builtin::{Arity, BuiltInModule}, steelerr, SteelVal
-    }, Result
+use freedom_async::{Executor, smol::block_on};
+use freedom_scheme::{
+    Result,
+    steel::{
+        SteelVal,
+        gc::Gc,
+        primitives::lists::plist_get,
+        rvals::{FromSteelVal, FutureResult},
+        steel_vm::builtin::{Arity, BuiltInModule},
+        steelerr,
+    },
 };
+use freedom_log::{handle_error, info};
 
 use winit::{
     application::ApplicationHandler,
@@ -143,7 +151,7 @@ fn run_winit(args: &[SteelVal]) -> Result<SteelVal> {
 
 #[unsafe(no_mangle)]
 pub fn init() {
-    freedom_core::logging::init_local();
+    freedom_log::init_local();
 }
 
 #[unsafe(no_mangle)]

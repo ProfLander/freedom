@@ -20,7 +20,9 @@
         (halt))
       cc)))
 
-(define spawn #%spawn)
+(define-syntax spawn
+  (syntax-rules []
+    [(spawn exp ...) (begin (#%spawn exp) ...)]))
 
 (let ([cc (current-continuation)])
   (if (continuation? cc)

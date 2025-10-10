@@ -4,10 +4,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{Result, err, handle_error, handle_error_with};
 use libloading::Library;
-use log::info;
-use steel::{rvals::Custom, steelerr, throw};
+
+use freedom_log::{handle_error, handle_error_with, info};
+use freedom_scheme::{
+    Result, err,
+    steel::{rvals::Custom, steelerr, throw},
+};
 
 // Handle to a temporary copy of a dynamic library
 #[derive(Debug)]

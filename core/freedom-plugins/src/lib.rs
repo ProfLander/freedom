@@ -7,15 +7,20 @@ use std::{
     time::Duration,
 };
 
-use log::info;
-use notify_debouncer_full::notify::{EventKind, RecursiveMode};
-use steel::{
-    SteelVal,
-    steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
-    steelerr, throw,
+use freedom_scheme::{
+    Result,
+    steel::{
+        steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+        steelerr, throw,
+    },
 };
+use freedom_fs::{
+    Watcher,
+    notify_debouncer_full::notify::{EventKind, RecursiveMode},
+};
+use freedom_log::{handle_error, info};
 
-use crate::{ENGINE, Result, fs::Watcher, handle_error, plugins::plugin::Plugin};
+use crate::plugin::Plugin;
 
 thread_local! {
     static PLUGINS: OnceCell<Plugins> = OnceCell::new();
@@ -25,8 +30,7 @@ pub fn init(dir: &str) -> Result<()> {
     // Construct plugins
     let plugins = Plugins::new(&Path::new(dir))?;
 
-    ENGINE.with(|engine| {
-        let engine = &mut engine.borrow_mut();
+    freedom_scheme::with_engine_mut(|engine| {
         engine.register_fn("#%get-plugin", get_plugin);
         Ok(()) as Result<()>
     })?;
@@ -80,7 +84,7 @@ impl Plugins {
         P: AsRef<Path> + 'static,
     {
         let path = path.as_ref().to_path_buf();
-        let debouncer = crate::fs::watch(
+        let debouncer = freedom_fs::watch(
             path.clone(),
             Duration::from_secs_f32(0.1),
             None,

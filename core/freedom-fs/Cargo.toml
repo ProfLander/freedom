@@ -1,0 +1,15 @@
+[package]
+name = "freedom-fs"
+version = "1.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+freedom-async = { workspace = true }
+freedom-log = { workspace = true }
+
+steel-core = { workspace = true }
+
+notify-debouncer-full = "0.6.0"

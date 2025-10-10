@@ -1,5 +1,7 @@
+(require "core.scm")
 (require "async.scm")
 
-(spawn 'print-loop)
-(spawn 'repl)
-(spawn 'winit)
+(spawn
+  (script print-loop)
+  (script repl)
+  (script winit))

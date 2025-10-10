@@ -7,4 +7,5 @@ edition = "2024"
 crate-type = ["dylib"]
 
 [dependencies]
-freedom-core = { workspace = true }
+freedom-log = { workspace = true }
+freedom-scheme = { workspace = true }

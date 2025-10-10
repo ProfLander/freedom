@@ -1,15 +1,19 @@
+pub use smol;
+
 use std::{cell::RefCell, rc::Rc};
 
-use log::info;
 use smol::{LocalExecutor, block_on};
-use steel::{
-    SteelVal,
-    rvals::{Custom, FromSteelVal, IntoSteelVal},
-    steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
-    stop,
-};
 
-use crate::{Program, Result, handle_error};
+use freedom_log::{handle_error, info};
+use freedom_scheme::{
+    Program, Result,
+    steel::{
+        SteelVal,
+        rvals::{Custom, FromSteelVal, IntoSteelVal},
+        steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+        stop,
+    },
+};
 
 thread_local! {
     pub(crate) static EXECUTOR: Executor = {
@@ -23,7 +27,7 @@ pub fn executor() -> Executor {
 }
 
 pub fn init() -> Result<()> {
-    crate::with_engine_mut(|engine| {
+    freedom_scheme::with_engine_mut(|engine| {
         let mut module = BuiltInModule::new("freedom/async");
 
         module
@@ -44,7 +48,7 @@ pub fn init() -> Result<()> {
                     let res = res?;
 
                     info!("Calling continuation with result: {res:?}");
-                    crate::with_engine_mut(|engine| {
+                    freedom_scheme::with_engine_mut(|engine| {
                         engine.call_function_with_args(cont, vec![res])
                     })?;
 
@@ -102,18 +106,10 @@ impl Executor {
                 info!("Spawning future");
                 self.spawn(fut.unwrap().into_shared())
             }
-            SteelVal::SymbolV(sym) | SteelVal::StringV(sym) => {
-                info!("Spawning script: {sym}");
-                self.spawn(async move {
-                    let name = sym.as_str();
-                    info!("Running script: {name}");
-                    crate::scripts::run(name)
-                })
-            }
             SteelVal::ListV(_) => {
                 info!("Spawning form {task}");
                 self.spawn(async move {
-                    crate::with_engine_mut(|engine| {
+                    freedom_scheme::with_engine_mut(|engine| {
                         info!("Running form {task}");
                         engine.run(format!("({task})"))
                     })
@@ -123,7 +119,7 @@ impl Executor {
                 Ok(prog) => {
                     info!("Spawning program {task}");
                     self.spawn(async move {
-                        crate::with_engine_mut(|engine| {
+                        freedom_scheme::with_engine_mut(|engine| {
                             info!("Running program {task:?}");
                             engine.run_raw_program(prog.unwrap())
                         })
@@ -132,7 +128,7 @@ impl Executor {
                 Err(_) => {
                     info!("Spawning task {task}");
                     self.spawn(async move {
-                        crate::with_engine_mut(|engine| {
+                        freedom_scheme::with_engine_mut(|engine| {
                             info!("Running task {task:?}");
                             engine.call_function_with_args(task, vec![])
                         })

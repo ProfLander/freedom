@@ -3,10 +3,13 @@ pub mod dylib;
 use std::path::{Path, PathBuf};
 
 use libloading::Symbol;
-use log::info;
-use steel::{rvals::Custom, steel_vm::builtin::BuiltInModule, steelerr};
 
-use crate::Result;
+use freedom_log::info;
+use freedom_scheme::{
+    Result,
+    steel::{rvals::Custom, steel_vm::builtin::BuiltInModule, steelerr},
+};
+
 use dylib::Dylib;
 
 // Interface to a reloadable rust dylib exposing a Steel module
@@ -54,10 +57,11 @@ impl Plugin {
         info!("Constructing module...");
         let module = module();
 
+ 
+ 
         // Inject dylib into module for lifetime control
-        info!("Emplacing new dylib...");
         drop(self.loaded.replace((module, lib)));
 
-        Ok(())
+                Ok(())
     }
 }

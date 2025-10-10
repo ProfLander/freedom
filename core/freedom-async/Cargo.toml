@@ -1,11 +1,13 @@
 [package]
-name = "freedome"
+name = "freedom-async"
 version = "1.0.0"
 edition = "2024"
 
+[lib]
+crate-type = ["rlib"]
+
 [dependencies]
 freedom-log = { workspace = true }
-freedom-async = { workspace = true }
 freedom-scheme = { workspace = true }
-freedom-plugins = { workspace = true }
-freedom-scripts = { workspace = true }
+
+smol = "2.0.2"
