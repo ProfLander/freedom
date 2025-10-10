@@ -1,4 +1,4 @@
-(require-builtin freedom/async)
+(require "async.scm")
 (require-builtin freedom/log)
 
 (call-with-exception-handler
@@ -9,4 +9,4 @@
     (flush-output-port (current-output-port))
     (displayln (eval-string (read-line)))))
 
-(#%spawn 'repl)
+(spawn 'repl)

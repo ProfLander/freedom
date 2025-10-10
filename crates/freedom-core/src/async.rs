@@ -18,6 +18,10 @@ thread_local! {
     };
 }
 
+pub fn executor() -> Executor {
+    EXECUTOR.with(Clone::clone)
+}
+
 pub fn init() -> Result<()> {
     crate::with_engine_mut(|engine| {
         let mut module = BuiltInModule::new("freedom/async");
@@ -52,6 +56,15 @@ pub fn init() -> Result<()> {
 
         Ok(())
     })
+}
+
+pub fn run() {
+    let exe = executor();
+    let exe = exe.unwrap();
+    let exe = exe.borrow();
+    while !exe.is_empty() {
+        block_on(exe.tick());
+    }
 }
 
 #[derive(Clone)]
@@ -127,18 +140,5 @@ impl Executor {
                 }
             },
         }
-    }
-}
-
-pub fn executor() -> Executor {
-    EXECUTOR.with(Clone::clone)
-}
-
-pub fn run() {
-    let exe = executor();
-    let exe = exe.unwrap();
-    let exe = exe.borrow();
-    while !exe.is_empty() {
-        block_on(exe.tick());
     }
 }

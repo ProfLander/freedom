@@ -2,7 +2,7 @@ use freedom_core::logging::info;
 use freedom_core::steel::steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn};
 
 fn print_hello() {
-    info!("Hello, wow!");
+    info!("Hello, gubbin!");
 }
 
 #[unsafe(no_mangle)]

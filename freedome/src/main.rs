@@ -14,7 +14,7 @@ fn main_impl() -> freedom_core::Result<()> {
     freedom_core::logging::init();
 
     // Setup plugins
-    freedom_core::plugins::init(PLUGIN_DIR, vec!["library".into(), "freedom_winit".into()])?;
+    freedom_core::plugins::init(PLUGIN_DIR)?;
 
     // Setup scripts
     freedom_core::scripts::init(&Path::new("scheme"))?;

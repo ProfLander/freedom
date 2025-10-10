@@ -1,6 +1,8 @@
-(require-builtin freedom/async)
-(require-builtin library)
+(require "async.scm")
+(require "core.scm")
+
+(#%require-plugin library (only-in print-hello))
 
 (displayln "Print loop")
 (print-hello)
-(#%spawn 'print-loop)
+(spawn 'print-loop)

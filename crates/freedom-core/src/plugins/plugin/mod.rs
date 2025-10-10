@@ -4,45 +4,43 @@ use std::path::{Path, PathBuf};
 
 use libloading::Symbol;
 use log::info;
-use steel::{
-    SteelVal,
-    rvals::{Custom, IntoSteelVal},
-    steel_vm::{builtin::BuiltInModule, engine::Engine},
-    steelerr, throw,
-};
+use steel::{rvals::Custom, steel_vm::builtin::BuiltInModule, steelerr};
 
 use crate::Result;
 use dylib::Dylib;
 
 // Interface to a reloadable rust dylib exposing a Steel module
 pub struct Plugin {
-    pub path: PathBuf,
+    path: PathBuf,
+    loaded: Option<(BuiltInModule, Dylib)>,
 }
 
 impl Custom for Plugin {}
 
 impl Plugin {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Ok(Plugin {
+        let mut plugin = Plugin {
             path: path.as_ref().to_path_buf(),
-        })
+            loaded: None,
+        };
+        plugin.load()?;
+        Ok(plugin)
     }
 
-    pub fn reload(&self, engine: &mut Engine) -> Result<()> {
+    pub fn path(&self) -> &Path {
+        self.path.as_path()
+    }
+
+    pub fn module(&self) -> Option<&BuiltInModule> {
+        self.loaded.as_ref().map(|(module, _)| module)
+    }
+
+    pub fn load(&mut self) -> Result<()> {
         info!("Plugin::module");
         let lib = Dylib::new(&self.path)?;
 
-        let name = self
-            .path
-            .file_stem()
-            .ok_or_else(throw!(Generic => "Path has no file stem: {:?}", self.path))?
-            .to_str()
-            .ok_or_else(
-                throw!(Generic => "Failed to convert path to string slice: {:?}", self.path),
-            )?;
-
         info!("Dropping existing dylib...");
-        let _ = engine.update_value(&format!("%-plugin-dylib-{}", name), SteelVal::Void);
+        drop(self.loaded.take());
 
         info!("Extracting init symbol...");
         if let Ok(init) = unsafe { lib.get::<fn()>(b"init") } {
@@ -50,15 +48,15 @@ impl Plugin {
         }
 
         info!("Extracting module symbol...");
-        let sym: Symbol<fn() -> BuiltInModule> =
+        let module: Symbol<fn() -> BuiltInModule> =
             unsafe { lib.get(b"module").or_else(|e| steelerr!(Io => e))? };
 
-        info!("Registering module...");
-        engine.register_module(sym());
+        info!("Constructing module...");
+        let module = module();
 
         // Inject dylib into module for lifetime control
         info!("Emplacing new dylib...");
-        engine.register_value(&format!("%-plugin-dylib-{}", name), lib.into_steelval()?);
+        drop(self.loaded.replace((module, lib)));
 
         Ok(())
     }

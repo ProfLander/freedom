@@ -1,5 +1,5 @@
-(require-builtin freedom/async)
+(require "async.scm")
 
-(#%spawn 'print-loop)
-(#%spawn 'repl)
-(#%spawn 'winit)
+(spawn 'print-loop)
+(spawn 'repl)
+(spawn 'winit)

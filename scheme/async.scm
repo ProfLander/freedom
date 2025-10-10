@@ -1,4 +1,4 @@
-(provide yield await)
+(provide yield await spawn)
 
 (require-builtin freedom/async)
 
@@ -19,6 +19,8 @@
         (#%await fut cc)
         (halt))
       cc)))
+
+(define spawn #%spawn)
 
 (let ([cc (current-continuation)])
   (if (continuation? cc)

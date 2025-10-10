@@ -1,8 +1,9 @@
-(require-builtin freedom/async)
-(require-builtin freedom/winit)
-
 (require "core.scm")
 (require "async.scm")
+
+(require-builtin freedom/async)
+
+(#%require-plugin freedom_winit (only-in #%winit))
 
 (displayln "compiling winit callbacks")
 (let ([resumed (await (compile (displayln "resumed")))]
@@ -24,7 +25,7 @@
   (displayln exiting)
   (displayln memory-warning)
 
-  (#%spawn
+  (spawn
     (#%winit #%executor
       #:resumed resumed
       #:suspended suspended
