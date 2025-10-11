@@ -14,7 +14,6 @@ use crate::{
             steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
             stop,
         },
-        steel_future,
     },
 };
 

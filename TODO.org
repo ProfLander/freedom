@@ -1,0 +1,82 @@
+#:TITLE TODO
+
+- [x] Tighter control over async executor scheduling
+  - Currently runs 200 iterations per `yield_now`
+  - Means winit will be starved of CPU time
+  - Not affected by task spawning strategy
+  - Appears hardcoded
+  - FIXED: Used an atomic bool + spawned future to guarantee each task gets one turn per sleep
+
+- [ ] Generalize winit executor scheduling to the main run loop?
+  - May be better to have direct control than let smol's arbitrary 200-iteration machinery decide
+  - Conversely, that may be an optimization targeted at compiler loop unrolling
+    - i.e. A contributing factor to its speed
+
+- [ ] Implement async stdio
+  - Blocking prevents winit from functioning properly
+  - [ ] Start with basic stdin / stdout pipes
+    - Need the means to make this async on the scheme side
+  - [ ] Add readline as a switchable mode
+    - Preferably from scheme
+      - Choose which script to respawn based on state
+
+- [ ] Troubleshoot non-closing windows
+  - May be an artifact of blocking the winit loop, or of scheme value capture
+
+- [ ] Consider replacing scheme-level `script` abstraction with futures
+  - Reduces definition load on freedom::async, since scripts could simply construct a future
+    - Effectively equivalent, since they're spawned and run outside of scheme
+  - Can likely apply similar logic to other value-spawning specializations, replace with future constructors
+
+- [ ] Reimplement wgpu + egui demo
+  - Each their own plugin
+  - Load in winit address space
+  - Expose functions to be called by winit
+  - Neither should need to touch engine or executor
+  - Can reuse implementations from freedom-v1
+
+- [ ] Reintroduce threading
+  - Spawn worker threads from rust
+  - Control from scheme
+
+- [ ] `build.rs` machinery for shipping scheme files in crates
+  - Preferably not as raw text
+  - `RawProgramWithSymbols` likely no good, since it can't be shared across engines
+    (i.e. Across build-time / runtime)
+  - `Executable` maybe; need to search github repo for relevant conversations / PRs,
+    as there was some discussion of serializable programs
+
+- [ ] Filesystem plugin
+  - Should run on its own thread
+  - Provide storage for automatic loading as per scripts / plugins
+  - Watch a directory of gamedata and update accordingly
+  - Likely generalizable systems, scripts can be subsumed
+    - But not plugins, as they must be loaded from the filesystem
+  - Should be able to provide file lifecycle machinery
+    - i.e. Means to process file types into corresponding data,
+      add / update / delete on change at runtime, etc.
+    - Probably best done by passing raw file data across plugin boundaries
+      and allowing specialized types to be parsed and constructed in their own domains
+  - Most of this should live in scheme, since plugins should be no more than bindings to it
+
+- [ ] Egui debugging machinery
+  - Scheme state
+    - Modules, bindings, etc.
+      - Can map SteelVal to widgets
+        - Will need to consider multiple scheme engines
+          - i.e. Per-thread, per-plugin
+        - Hopefully use `make-channels` for propagating to egui
+        - May need a command interface
+        - Will need the means to specialize against certain forms / data types
+          - i.e. Check a list of implementations, fallback to general-purpose if not found
+  - Filesystem
+    - Will only be able to show file data by default, since specialized types live in their local domains
+    - Send widget definitions over the domain boundary to visualize specialized types like textures etc?
+
+- [ ] Sound plugin
+  - Use cpal
+
+- [ ] Load Necrodome gamedata
+
+- [ ] Collision / physics plugins
+  - Can use parry and rapier

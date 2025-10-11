@@ -1,10 +1,11 @@
-use std::cell::OnceCell;
+use std::{
+    cell::OnceCell,
+    rc::Rc,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 use freedom::{
-    r#async::{
-        executor::Executor,
-        smol::{block_on, future::yield_now},
-    },
+    r#async::executor::Executor,
     log::{handle_error, handle_error_with, info},
     scheme::{
         Result,
@@ -43,6 +44,7 @@ thread_local! {
 
 pub struct App {
     executor: Executor,
+    polling: Rc<AtomicBool>,
 }
 
 impl App {
@@ -81,8 +83,11 @@ impl App {
                 .or_else(|_| steelerr!(Infallible => "Event loop proxy already set"))?;
 
             info!("Entering event loop");
-            el.run_app(&mut App { executor })
-                .or_else(|e| steelerr!(Generic => e))?;
+            el.run_app(&mut App {
+                executor,
+                polling: Rc::new(AtomicBool::new(false)),
+            })
+            .or_else(|e| steelerr!(Generic => e))?;
             info!("Exiting event loop");
 
             Ok(SteelVal::Void)
@@ -185,8 +190,31 @@ impl ApplicationHandler<UserEvent> for App {
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        // Run callback
         handle_error(self.callback(event_loop, APP_ABOUT_TO_WAIT, vec![]));
-        block_on(self.executor.unwrap().run(yield_now()));
+
+        // Fetch executor
+        let exe = self.executor.unwrap();
+
+        // Set polling flag
+        self.polling.store(true, Ordering::Relaxed);
+
+        // Spawn a future to unset the polling flag
+        exe.spawn({
+            let polling = self.polling.clone();
+            async move {
+                polling.store(false, Ordering::Relaxed);
+            }
+        })
+        .detach();
+
+        // Poll the executor until the flag is unset,
+        // ensuring winit and other tasks get fair time share
+        while self.polling.load(Ordering::Relaxed) {
+            // The return value is meaningless here
+            // As winit is an infinitely-blocking task, the executor will never finish
+            exe.try_tick();
+        }
     }
 
     fn exiting(&mut self, event_loop: &ActiveEventLoop) {
