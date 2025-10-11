@@ -5,17 +5,17 @@ use std::{
     time::Duration,
 };
 
-use freedom_fs::{
+use crate::fs::{
     Watcher,
     notify_debouncer_full::notify::{EventKind, RecursiveMode},
 };
-use freedom_log::{handle_error, info};
-use freedom_scheme::{
+use crate::log::{handle_error, info};
+use crate::scheme::{
     Result,
     steel::{steelerr, throw},
 };
 
-use crate::{PLUGINS, plugin::Plugin};
+use crate::{plugins::PLUGINS, plugins::plugin::Plugin};
 
 // Thread-local collection of plugins
 pub struct Plugins {
@@ -45,7 +45,7 @@ impl Plugins {
         P: AsRef<Path> + 'static,
     {
         let path = path.as_ref().to_path_buf();
-        let debouncer = freedom_fs::watch(
+        let debouncer = crate::fs::watch(
             path.clone(),
             Duration::from_secs_f32(0.1),
             None,

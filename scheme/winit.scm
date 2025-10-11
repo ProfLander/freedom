@@ -4,53 +4,46 @@
 (require-builtin freedom/log)
 (require-builtin freedom/async)
 
-(#%require-plugin freedom_winit (only-in #%winit))
+(#%require-plugin freedom_winit (only-in #%winit-run))
 
 (define-syntax winit-callback
   (syntax-rules []
     [(_ args . body)
      '(lambda args . body)]))
 
-(define resumed
-  (winit-callback (el)
-    (displayln "resumed:" el)))
+(define-syntax program
+  (syntax-rules []
+    [(_ . body)
+     (quote (list . body))]))
 
-(define suspended
-  (winit-callback (el)
-    (displayln "suspended:" el)))
+(define init
+  (program
+    (require "scheme/async.scm")
 
-(define new-events
-  (winit-callback (el cause)
-    (displayln "new events:" el cause)))
+    (define [*resumed* el]
+      (displayln "resumed:" el))
 
-(define device-event
-  (winit-callback (el dev ev)
-    (displayln "device event:" el dev ev)))
+    (define [*suspended* el]
+      (displayln "suspended:" el))
 
-(define window-event
-  (winit-callback (el win ev)
-    (displayln "window event:" el win ev)))
+    (define [*new-events* el cause]
+      (displayln "new events:" el cause))
 
-(define about-to-wait
-  (winit-callback (el)
-    (displayln "about to wait:" el)))
+    (define [*device-event* el dev ev]
+      (displayln "device event:" el dev ev))
 
-(define exiting
-  (winit-callback (el)
-    (displayln "exiting:" el)))
+    (define [*window-event* el win ev]
+      (displayln "window event:" el win ev))
 
-(define memory-warning
-  (winit-callback (el)
-    (displayln "memory warning:" el)))
-      
+    (define [*about-to-wait* el]
+      (displayln "about to wait:" el))
+
+    (define [*exiting* el]
+      (displayln "exiting:" el))
+
+    (define [*memory-warning* el]
+      (displayln "memory warning:" el))))
+
 (info! "Starting winit...")
 (spawn
-  (#%winit #%executor
-    #:resumed resumed
-    #:suspended suspended
-    #:new-events new-events
-    #:device-event device-event
-    #:window-event window-event
-    ;#:about-to-wait about-to-wait
-    #:exiting exiting
-    #:memory-warning memory-warning))
+  (#%winit-run #%executor init))

@@ -7,17 +7,18 @@ use std::{
     time::Duration,
 };
 
-use freedom_fs::notify_debouncer_full::{
-    Debouncer, FileIdMap,
-    notify::{EventKind, ReadDirectoryChangesWatcher, RecursiveMode},
+use crate::{
+    fs::notify_debouncer_full::{
+        Debouncer, FileIdMap,
+        notify::{EventKind, ReadDirectoryChangesWatcher, RecursiveMode},
+    },
+    log::{handle_error_with, info},
+    scheme::{
+        Result,
+        steel::{compiler::program::RawProgramWithSymbols, steelerr, throw},
+    },
+    scripts::SCRIPTS,
 };
-use freedom_log::{handle_error_with, info};
-use freedom_scheme::{
-    Result,
-    steel::{compiler::program::RawProgramWithSymbols, steelerr, throw},
-};
-
-use crate::SCRIPTS;
 
 pub struct Scripts {
     scripts: RefCell<BTreeMap<Cow<'static, OsStr>, (Cow<'static, str>, RawProgramWithSymbols)>>,
@@ -49,7 +50,7 @@ impl Scripts {
 
     pub fn watch<P: AsRef<OsStr>>(&self, path: &P) -> Result<()> {
         let path = path.as_ref();
-        let debouncer = freedom_fs::watch(
+        let debouncer = crate::fs::watch(
             path,
             Duration::from_secs_f32(0.1),
             None,
@@ -108,7 +109,7 @@ impl Scripts {
         let src: Cow<'static, str> =
             Cow::Owned(std::fs::read_to_string(&path).or_else(|e| steelerr!(Generic => e))?);
         let prog =
-            freedom_scheme::with_engine_mut(|engine| engine.emit_raw_program(src.clone(), path))?;
+            crate::scheme::with_engine_mut(|engine| engine.emit_raw_program(src.clone(), path))?;
         Ok((src, prog))
     }
 

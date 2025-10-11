@@ -2,13 +2,14 @@ use std::path::{Path, PathBuf};
 
 use libloading::Symbol;
 
-use freedom_log::info;
-use freedom_scheme::{
-    Result,
-    steel::{rvals::Custom, steel_vm::builtin::BuiltInModule, steelerr},
+use crate::{
+    log::info,
+    plugins::dylib::Dylib,
+    scheme::{
+        Result,
+        steel::{rvals::Custom, steel_vm::builtin::BuiltInModule, steelerr},
+    },
 };
-
-use crate::dylib::Dylib;
 
 // Interface to a reloadable rust dylib exposing a Steel module
 pub struct Plugin {

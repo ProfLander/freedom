@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use freedom_scheme::steel::{SteelErr, SteelVal, list, rerrs::ErrorKind, rvals::IntoSteelVal};
+use freedom::scheme::steel::{SteelErr, SteelVal, list, rerrs::ErrorKind, rvals::IntoSteelVal};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
     event::{
@@ -65,12 +65,12 @@ macro_rules! opaque_wrappers {
             #[derive(Clone, PartialEq)]
             pub struct $name($inner);
 
-            impl freedom_scheme::steel::rvals::Custom for $name {
+            impl freedom::scheme::steel::rvals::Custom for $name {
                 fn fmt(&self) -> Option<Result<String, std::fmt::Error>> {
                     Some(Ok(format!("#%<{}>", stringify!($inner)).into()))
                 }
 
-                fn equality_hint(&self, other: &dyn freedom_scheme::steel::rvals::CustomType) -> bool {
+                fn equality_hint(&self, other: &dyn freedom::scheme::steel::rvals::CustomType) -> bool {
                     if let Some(other) = other.as_any_ref().downcast_ref() {
                         self.eq(other)
                     } else {
@@ -79,7 +79,7 @@ macro_rules! opaque_wrappers {
                 }
 
                 fn equality_hint_general(&self, other: &SteelVal) -> bool {
-                    if let Ok(other) = freedom_scheme::steel::rvals::FromSteelVal::from_steelval(other) {
+                    if let Ok(other) = freedom::scheme::steel::rvals::FromSteelVal::from_steelval(other) {
                         self.eq(&other)
                     } else {
                         false

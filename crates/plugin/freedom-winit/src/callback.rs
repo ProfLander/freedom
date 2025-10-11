@@ -1,4 +1,4 @@
-use freedom_scheme::{
+use freedom::scheme::{
     Result,
     steel::{
         SteelVal,
@@ -7,7 +7,7 @@ use freedom_scheme::{
     },
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Callback(SteelVal);
 
 impl FromSteelVal for Callback {
@@ -28,7 +28,7 @@ impl FromSteelVal for Callback {
             stop!(UnexpectedToken => "Expected 'lambda, got: {}", val)
         }
 
-        let mut exps = freedom_scheme::with_engine_mut(|engine| engine.run(format!("{}", val)))?;
+        let mut exps = freedom::scheme::with_engine_mut(|engine| engine.run(format!("{}", val)))?;
 
         if exps.len() != 1 {
             stop!(ArityMismatch => "Expected an output of length 1, got: {:?}", exps)
@@ -45,7 +45,7 @@ impl FromSteelVal for Callback {
 }
 
 impl IntoSteelVal for Callback {
-    fn into_steelval(self) -> freedom_scheme::steel::rvals::Result<SteelVal> {
+    fn into_steelval(self) -> freedom::scheme::steel::rvals::Result<SteelVal> {
         Ok(self.0)
     }
 }

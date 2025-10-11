@@ -1,4 +1,4 @@
-use steel::{compiler::program::RawProgramWithSymbols, rvals::Custom};
+use crate::scheme::steel::{compiler::program::RawProgramWithSymbols, rvals::Custom};
 
 #[derive(Clone)]
 pub struct Program(RawProgramWithSymbols);

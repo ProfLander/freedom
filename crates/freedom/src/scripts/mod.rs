@@ -5,17 +5,19 @@ use std::{
     ffi::{OsStr, OsString},
 };
 
-use freedom_log::info;
-use freedom_scheme::{
-    Result,
-    program::Program,
-    steel::{
-        SteelVal,
-        steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+use crate::{
+    log::info,
+    scheme::{
+        Result,
+        program::Program,
+        steel::{
+            SteelVal,
+            steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+        },
     },
 };
 
-use crate::scripts::Scripts;
+use scripts::Scripts;
 
 thread_local! {
     static SCRIPTS: Scripts = Scripts::new();
@@ -23,9 +25,6 @@ thread_local! {
 
 pub fn init<P: AsRef<OsStr>>(path: &P) -> Result<()> {
     SCRIPTS.with(|scripts| scripts.watch(path))?;
-    freedom_scheme::with_engine_mut(|engine| {
-        engine.register_module(module());
-    });
     Ok(())
 }
 
@@ -40,7 +39,7 @@ pub fn module() -> BuiltInModule {
 pub async fn run<P: AsRef<OsStr>>(name: &P) -> Result<Vec<SteelVal>> {
     info!("Running {:?}", name.as_ref());
     let main = get_script(name).await?;
-    freedom_scheme::with_engine_mut(|engine| engine.run_raw_program(main.unwrap()))
+    crate::scheme::with_engine_mut(|engine| engine.run_raw_program(main.unwrap()))
 }
 
 pub async fn get_script<P: AsRef<OsStr>>(name: P) -> Result<Program> {

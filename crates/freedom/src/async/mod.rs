@@ -4,18 +4,21 @@ pub use smol;
 
 use smol::block_on;
 
-use freedom_log::info;
-use freedom_scheme::{
-    Result,
-    steel::{
-        SteelVal,
-        rvals::IntoSteelVal,
-        steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
-        stop,
+use crate::{
+    log::info,
+    scheme::{
+        Result,
+        steel::{
+            SteelVal,
+            rvals::IntoSteelVal,
+            steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+            stop,
+        },
+        steel_future,
     },
 };
 
-use crate::executor::Executor;
+use crate::r#async::executor::Executor;
 
 thread_local! {
     pub(crate) static EXECUTOR: Executor = {
@@ -26,13 +29,6 @@ thread_local! {
 
 pub fn executor() -> Executor {
     EXECUTOR.with(Clone::clone)
-}
-
-pub fn init() -> Result<()> {
-    freedom_scheme::with_engine_mut(|engine| {
-        engine.register_module(module()?);
-        Ok(())
-    })
 }
 
 pub fn module() -> Result<BuiltInModule> {
@@ -56,7 +52,7 @@ pub fn module() -> Result<BuiltInModule> {
                 let res = res?;
 
                 info!("Calling continuation with result: {res:?}");
-                freedom_scheme::with_engine_mut(|engine| {
+                crate::scheme::with_engine_mut(|engine| {
                     engine.call_function_with_args(cont, vec![res])
                 })?;
 
@@ -71,8 +67,7 @@ pub fn run() {
     info!("Running executor");
     let exe = executor();
     let exe = exe.unwrap();
-    let exe = exe.borrow();
-    while !exe.is_empty() {
+    while exe.try_tick() {
         block_on(exe.tick());
     }
 }

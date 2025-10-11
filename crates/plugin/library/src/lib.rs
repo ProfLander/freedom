@@ -1,5 +1,5 @@
-use freedom_log::info;
-use freedom_scheme::steel::steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn};
+use freedom::log::info;
+use freedom::scheme::steel::steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn};
 
 fn print_hello() {
     info!("Hello, gubbin!");
@@ -14,5 +14,5 @@ pub fn module() -> BuiltInModule {
 
 #[unsafe(no_mangle)]
 pub fn init() {
-    freedom_log::init_local();
+    freedom::log::init_local();
 }

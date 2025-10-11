@@ -7,8 +7,6 @@ edition = "2024"
 crate-type = ["dylib"]
 
 [dependencies]
-freedom-log = { workspace = true }
-freedom-async = { workspace = true }
-freedom-scheme = { workspace = true }
+freedom = { workspace = true }
 
 winit = "0.30.12"

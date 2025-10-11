@@ -5,4 +5,5 @@
 
 (displayln "Print loop")
 (print-hello)
+
 (spawn (script print-loop))

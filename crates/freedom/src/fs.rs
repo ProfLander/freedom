@@ -2,15 +2,15 @@ pub use notify_debouncer_full;
 
 use std::{path::Path, time::Duration};
 
-use freedom_async::smol::channel::unbounded;
-use freedom_log::info;
+use crate::{
+    r#async::smol::channel::unbounded,
+    log::{handle_error, info},
+    scheme::steel::steelerr,
+};
 use notify_debouncer_full::{
     DebounceEventResult, DebouncedEvent, Debouncer, FileIdMap, RecommendedCache, new_debouncer_opt,
     notify::{Config, Error, ReadDirectoryChangesWatcher, RecursiveMode},
 };
-use steel::steelerr;
-
-use freedom_log::handle_error;
 
 pub type Watcher = Debouncer<ReadDirectoryChangesWatcher, FileIdMap>;
 
@@ -45,7 +45,7 @@ where
             .with_manual_polling(),
     )?;
 
-    freedom_async::executor().spawn::<_, ()>(async move {
+    crate::r#async::executor().spawn::<_, ()>(async move {
         loop {
             let events = rx.recv().await;
             let events = events.or_else(|e| steelerr!(Generic => e))?;

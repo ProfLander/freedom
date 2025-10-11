@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use freedom_scheme::steel::{SteelErr, SteelVal, stop};
+use freedom::scheme::steel::{SteelErr, SteelVal, stop};
 use winit::{
     dpi::{Position, Size},
     window::{Cursor, Fullscreen, Icon, Theme, WindowAttributes, WindowButtons, WindowLevel},

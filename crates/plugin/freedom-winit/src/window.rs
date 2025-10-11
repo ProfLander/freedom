@@ -1,9 +1,7 @@
-use freedom_scheme::steel::{
-    SteelErr, SteelVal,
-    rvals::Custom,
-    steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
-};
 use crate::into_steelval::WinitIntoSteelVal;
+use freedom::scheme::steel::{
+    SteelErr, SteelVal, rvals::Custom, steel_vm::engine::Engine as SteelEngine,
+};
 
 pub struct Window(pub winit::window::Window);
 
@@ -24,20 +22,24 @@ macro_rules! impl_arity_0 {
 }
 
 macro_rules! register_impl {
-    ($module:ident, $ident:ident, $name:expr) => {
-        $module.register_fn($name, Self::$ident);
+    ($target:ident, $ident:ident, $name:expr) => {
+        freedom::scheme::steel::steel_vm::register_fn::RegisterFn::register_fn(
+            $target,
+            $name,
+            Self::$ident,
+        );
     };
 }
 
 macro_rules! register {
-    ($module:ident { $($ident:ident : $name:expr),* }) => {
-        $(register_impl!($module, $ident, $name);)*
+    ($target:ident { $($ident:ident : $name:expr),* }) => {
+        $(register_impl!($target, $ident, $name);)*
     };
 }
 
 impl Window {
-    pub fn register_type(module: &mut BuiltInModule) {
-        register!(module {
+    pub fn register_type(engine: &mut SteelEngine) {
+        register!(engine {
             id: "Window-id",
             scale_factor: "Window-scale-factor",
             request_redraw: "Window-request-redraw",
@@ -139,6 +141,6 @@ impl Window {
 
 impl WinitIntoSteelVal for winit::window::Window {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
-        freedom_scheme::steel::rvals::IntoSteelVal::into_steelval(Window(self))
+        freedom::scheme::steel::rvals::IntoSteelVal::into_steelval(Window(self))
     }
 }

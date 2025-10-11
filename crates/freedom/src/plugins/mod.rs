@@ -4,12 +4,12 @@ pub mod plugins;
 
 use std::{cell::OnceCell, ffi::OsStr, path::Path};
 
-use freedom_scheme::{
+use crate::scheme::{
     Result,
     steel::steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
 };
 
-use crate::{plugin::Plugin, plugins::Plugins};
+use crate::{plugins::plugin::Plugin, plugins::plugins::Plugins};
 
 thread_local! {
     static PLUGINS: OnceCell<Plugins> = OnceCell::new();
@@ -18,11 +18,6 @@ thread_local! {
 pub fn init<P: AsRef<OsStr>>(dir: &P) -> Result<()> {
     // Construct plugins
     let plugins = Plugins::new(Path::new(dir))?;
-
-    freedom_scheme::with_engine_mut(|engine| {
-        engine.register_module(module());
-        Ok(()) as Result<()>
-    })?;
 
     PLUGINS.with(|cell| {
         cell.set(plugins)
@@ -33,7 +28,7 @@ pub fn init<P: AsRef<OsStr>>(dir: &P) -> Result<()> {
     Ok(())
 }
 
-fn module() -> BuiltInModule {
+pub fn module() -> BuiltInModule {
     let mut module = BuiltInModule::new("freedom/plugins");
     module.register_fn("#%get-plugin", get_plugin);
     module

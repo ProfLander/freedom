@@ -1,10 +1,14 @@
 use std::sync::{Arc, Mutex};
 
-use freedom_async::smol::channel::bounded;
-use freedom_scheme::steel::{
-    SteelVal,
-    rvals::Custom,
-    steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+use freedom::r#async::smol::channel::bounded;
+use freedom::scheme::{
+    steel::{
+        SteelVal,
+        rvals::{Custom, IntoSteelVal},
+        steel_vm::{engine::Engine as SteelEngine, register_fn::RegisterFn},
+        steelerr,
+    },
+    steel_future,
 };
 use winit::{event_loop::ActiveEventLoop, window::WindowAttributes};
 
@@ -24,28 +28,31 @@ impl EventLoop {
         self.0.lock().unwrap().len()
     }
 
-    pub fn register_type(module: &mut BuiltInModule) {
-        module
+    pub fn register_type(engine: &mut SteelEngine) {
+        engine
             .register_fn(
-                "ActiveEventLoop-create-window",
+                "EventLoop-create-window",
                 |this: Self, attributes: SteelVal| {
                     let attributes = WindowAttributes::from_steelval(attributes).unwrap();
-                    async move {
-                        let (tx, rx) = bounded(1);
-                        this.0.lock().unwrap().push(Box::new(move |event_loop| {
-                            tx.send_blocking(
-                                event_loop
-                                    .create_window(attributes)
-                                    .and_then(|t| Ok(Window(t)))
-                                    .unwrap(),
-                            )
-                            .unwrap();
-                        }));
-                        rx.recv().await.unwrap()
-                    }
+                    let (tx, rx) = bounded(1);
+                    this.0.lock().unwrap().push(Box::new(move |event_loop| {
+                        tx.send_blocking(
+                            event_loop
+                                .create_window(attributes)
+                                .and_then(|t| Ok(Window(t)))
+                                .unwrap(),
+                        )
+                        .unwrap();
+                    }));
+                    steel_future(async move {
+                        rx.recv()
+                            .await
+                            .or_else(|e| steelerr!(Generic => e))?
+                            .into_steelval()
+                    })
                 },
             )
-            .register_fn("ActiveEventLoop-exit", |this: Self| async move {
+            .register_fn("EventLoop-exit", |this: Self| async move {
                 let (tx, rx) = bounded(1);
                 this.0.lock().unwrap().push(Box::new(move |event_loop| {
                     event_loop.exit();

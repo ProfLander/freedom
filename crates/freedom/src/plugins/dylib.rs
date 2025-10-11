@@ -6,9 +6,9 @@ use std::{
 
 use libloading::Library;
 
-use freedom_log::{handle_error, handle_error_with, info};
-use freedom_scheme::{
-    Result, err,
+use crate::{err, log::{handle_error, handle_error_with, info}};
+use crate::scheme::{
+    Result,
     steel::{rvals::Custom, steelerr, throw},
 };
 

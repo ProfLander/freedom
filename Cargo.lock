@@ -940,21 +940,16 @@ checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 name = "freedom"
 version = "1.0.0"
 dependencies = [
- "freedom-async",
+ "async-executor",
+ "env_logger",
  "freedom-build",
- "freedom-log",
- "freedom-plugins",
- "freedom-scheme",
- "freedom-scripts",
-]
-
-[[package]]
-name = "freedom-async"
-version = "1.0.0"
-dependencies = [
- "freedom-log",
- "freedom-scheme",
+ "libloading",
+ "log",
+ "notify-debouncer-full",
  "smol",
+ "steel-core",
+ "tempfile",
+ "uuid",
 ]
 
 [[package]]
@@ -962,60 +957,10 @@ name = "freedom-build"
 version = "1.0.0"
 
 [[package]]
-name = "freedom-fs"
-version = "1.0.0"
-dependencies = [
- "freedom-async",
- "freedom-log",
- "notify-debouncer-full",
- "steel-core",
-]
-
-[[package]]
-name = "freedom-log"
-version = "1.0.0"
-dependencies = [
- "env_logger",
- "freedom-scheme",
- "log",
-]
-
-[[package]]
-name = "freedom-plugins"
-version = "1.0.0"
-dependencies = [
- "freedom-fs",
- "freedom-log",
- "freedom-scheme",
- "libloading",
- "tempfile",
- "uuid",
-]
-
-[[package]]
-name = "freedom-scheme"
-version = "1.0.0"
-dependencies = [
- "log",
- "steel-core",
-]
-
-[[package]]
-name = "freedom-scripts"
-version = "1.0.0"
-dependencies = [
- "freedom-fs",
- "freedom-log",
- "freedom-scheme",
-]
-
-[[package]]
 name = "freedom-winit"
 version = "1.0.0"
 dependencies = [
- "freedom-async",
- "freedom-log",
- "freedom-scheme",
+ "freedom",
  "winit",
 ]
 
@@ -1556,8 +1501,7 @@ checksum = "f9fbbcab51052fe104eb5e5d351cf728d30a5be1fe14d9be8a3b097481fb97de"
 name = "library"
 version = "1.0.0"
 dependencies = [
- "freedom-log",
- "freedom-scheme",
+ "freedom",
 ]
 
 [[package]]
@@ -2577,6 +2521,7 @@ dependencies = [
  "cfg-if",
  "libc",
  "psm",
+ "windows-sys 0.52.0",
  "windows-sys 0.59.0",
 ]
 

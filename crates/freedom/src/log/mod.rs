@@ -1,6 +1,6 @@
 pub use log::{Level, debug, error, info, log, trace, warn};
 
-use freedom_scheme::{
+use crate::scheme::{
     Result,
     steel::{
         SteelErr, SteelVal,
@@ -13,9 +13,6 @@ use freedom_scheme::{
 
 pub fn init() {
     init_local();
-    freedom_scheme::with_engine_mut(|engine| {
-        engine.register_module(module());
-    });
 }
 
 pub fn module() -> BuiltInModule {

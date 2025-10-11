@@ -1,8 +1,0 @@
-[package]
-name = "freedom-scheme"
-version = "1.0.0"
-edition = "2024"
-
-[dependencies]
-log = { workspace = true }
-steel-core = { workspace = true }

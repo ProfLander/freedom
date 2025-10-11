@@ -1,8 +1,15 @@
+pub mod r#async;
+pub mod log;
+pub mod plugins;
+pub mod scheme;
+pub mod scripts;
+pub mod fs;
+
 use std::ffi::OsStr;
 
-use freedom_async::smol::block_on;
-use freedom_log::handle_error;
-use freedom_scheme::Result;
+use r#async::smol::block_on;
+use log::handle_error;
+use scheme::Result;
 
 pub fn run<P: AsRef<OsStr>, Q: AsRef<OsStr>, R: AsRef<OsStr>>(
     plugin_dir: P,
@@ -18,22 +25,19 @@ pub fn run_result<P: AsRef<OsStr>, Q: AsRef<OsStr>, R: AsRef<OsStr>>(
     entrypoint: R,
 ) -> Result<()> {
     // Setup logging
-    freedom_log::init();
+    log::init();
 
     // Setup plugins
-    freedom_plugins::init(&plugin_dir)?;
+    plugins::init(&plugin_dir)?;
 
     // Setup scripts
-    freedom_scripts::init(&script_dir)?;
-
-    // Setup async
-    freedom_async::init()?;
+    scripts::init(&script_dir)?;
 
     // Run main script
-    block_on(freedom_scripts::run(&entrypoint))?;
+    block_on(scripts::run(&entrypoint))?;
 
     // Run async engine to completion
-    freedom_async::run();
+    r#async::run();
 
     // Done
     Ok(())
