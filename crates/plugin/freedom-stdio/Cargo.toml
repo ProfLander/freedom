@@ -1,0 +1,10 @@
+[package]
+name = "freedom-stdio"
+version = "1.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+freedom = { workspace = true }

@@ -5,6 +5,7 @@ members = [
 
     "crates/library/freedom-build",
 
+    "crates/plugin/freedom-stdio",
     "crates/plugin/freedom-winit",
     "crates/plugin/library",
 ]

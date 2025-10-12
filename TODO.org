@@ -7,11 +7,6 @@
   - Appears hardcoded
   - FIXED: Used an atomic bool + spawned future to guarantee each task gets one turn per sleep
 
-- [ ] Generalize winit executor scheduling to the main run loop?
-  - May be better to have direct control than let smol's arbitrary 200-iteration machinery decide
-  - Conversely, that may be an optimization targeted at compiler loop unrolling
-    - i.e. A contributing factor to its speed
-
 - [ ] Implement async stdio
   - Blocking prevents winit from functioning properly
   - [ ] Start with basic stdin / stdout pipes

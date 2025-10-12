@@ -957,6 +957,13 @@ name = "freedom-build"
 version = "1.0.0"
 
 [[package]]
+name = "freedom-stdio"
+version = "1.0.0"
+dependencies = [
+ "freedom",
+]
+
+[[package]]
 name = "freedom-winit"
 version = "1.0.0"
 dependencies = [
