@@ -1,6 +1,9 @@
 use std::error::Error;
 
-use freedom::scheme::steel::{SteelErr, SteelVal, list, rerrs::ErrorKind, rvals::IntoSteelVal};
+use freedom::{
+    scheme::steel::{SteelErr, SteelVal, list, rerrs::ErrorKind, rvals::IntoSteelVal},
+    sym,
+};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
     event::{
@@ -112,10 +115,10 @@ impl WinitIntoSteelVal for Fullscreen {
             "Fullscreen",
             match self {
                 Fullscreen::Exclusive(video_mode_handle) => {
-                    list!["Exclusive", video_mode_handle.into_steelval()]
+                    list![sym!(Exclusive), video_mode_handle.into_steelval()]
                 }
                 Fullscreen::Borderless(monitor_handle) =>
-                    list!["Borderless", monitor_handle.into_steelval()],
+                    list![sym!(Borderless), monitor_handle.into_steelval()],
             }
         ])
     }
@@ -124,26 +127,30 @@ impl WinitIntoSteelVal for Fullscreen {
 impl WinitIntoSteelVal for DeviceEvent {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "DeviceEvent",
+            sym!(DeviceEvent),
             match self {
-                DeviceEvent::Added => list!["Added"],
-                DeviceEvent::Removed => list!["Removed"],
+                DeviceEvent::Added => list![sym!(Added)],
+                DeviceEvent::Removed => list![sym!(Removed)],
                 DeviceEvent::MouseMotion { delta } => {
-                    list!["MouseMotion", list!["delta", delta]]
+                    list![sym!(MouseMotion), list![sym!(delta), delta]]
                 }
                 DeviceEvent::MouseWheel { delta } => {
-                    list!["MouseWheel", list!["delta", delta.into_steelval()]]
+                    list![sym!(MouseWheel), list![sym!(delta), delta.into_steelval()]]
                 }
                 DeviceEvent::Motion { axis, value } => {
-                    list!["Motion", list!["axis", axis], list!["value", value]]
+                    list![
+                        sym!(Motion),
+                        list![sym!(axis), axis],
+                        list![sym!(value), value]
+                    ]
                 }
                 DeviceEvent::Button { button, state } => list![
-                    "Button",
-                    list!["button", button],
-                    list!["state", state.into_steelval()]
+                    sym!(Button),
+                    list![sym!(button), button],
+                    list![sym!(state), state.into_steelval()]
                 ],
                 DeviceEvent::Key(raw_key_event) => {
-                    list!["Key", raw_key_event.into_steelval()]
+                    list![sym!(Key), raw_key_event.into_steelval()]
                 }
             }
         ])
@@ -153,13 +160,13 @@ impl WinitIntoSteelVal for DeviceEvent {
 impl WinitIntoSteelVal for MouseScrollDelta {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "MouseScrollDelta",
+            sym!(MouseScrollDelta),
             match self {
                 MouseScrollDelta::LineDelta(x, y) => {
-                    list!["LineDelta", x, y]
+                    list![sym!(LineDelta), x, y]
                 }
                 MouseScrollDelta::PixelDelta(physical_position) => {
-                    list!["PixelDelta", physical_position.into_steelval()]
+                    list![sym!(PixelDelta), physical_position.into_steelval()]
                 }
             }
         ])
@@ -172,7 +179,7 @@ where
 {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "PhysicalPosition",
+            sym!(PhysicalPosition),
             list!["x", self.x],
             list!["y", self.y]
         ])
@@ -185,9 +192,9 @@ where
 {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "PhysicalSize",
-            list!["width", self.width],
-            list!["height", self.height]
+            sym!(PhysicalSize),
+            list![sym!(width), self.width],
+            list![sym!(height), self.height]
         ])
     }
 }
@@ -195,10 +202,10 @@ where
 impl WinitIntoSteelVal for ElementState {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "ElementState",
+            sym!(ElementState),
             match self {
-                ElementState::Pressed => list!["Pressed"],
-                ElementState::Released => list!["Released"],
+                ElementState::Pressed => list![sym!(Pressed)],
+                ElementState::Released => list![sym!(Released)],
             }
         ])
     }
@@ -206,22 +213,22 @@ impl WinitIntoSteelVal for ElementState {
 
 impl WinitIntoSteelVal for RawKeyEvent {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
-        let physical_key = list!["physical-key", self.physical_key.into_steelval()];
-        let state = list!["state", self.state.into_steelval()];
-        Ok(list!["RawKeyEvent", physical_key, state])
+        let physical_key = list![sym!("physical-key"), self.physical_key.into_steelval()];
+        let state = list![sym!(state), self.state.into_steelval()];
+        Ok(list![sym!(RawKeyEvent), physical_key, state])
     }
 }
 
 impl WinitIntoSteelVal for PhysicalKey {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "PhysicalKey",
+            sym!(PhysicalKey),
             match self {
                 PhysicalKey::Code(key_code) => {
-                    list!["Code", key_code.into_steelval()]
+                    list![sym!(Code), key_code.into_steelval()]
                 }
                 PhysicalKey::Unidentified(native_key_code) => {
-                    list!["Unidentified", native_key_code.into_steelval()]
+                    list![sym!(Unidentified), native_key_code.into_steelval()]
                 }
             }
         ])
@@ -230,20 +237,20 @@ impl WinitIntoSteelVal for PhysicalKey {
 
 impl WinitIntoSteelVal for KeyCode {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
-        Ok(list!["KeyCode", format!("{self:?}")])
+        Ok(list![sym!(KeyCode), format!("{self:?}")])
     }
 }
 
 impl WinitIntoSteelVal for NativeKeyCode {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "NativeKeyCode",
+            sym!(NativeKeyCode),
             match self {
-                NativeKeyCode::Unidentified => list!["Unidentified"],
-                NativeKeyCode::Android(code) => list!["Android", code],
-                NativeKeyCode::MacOS(code) => list!["MacOS", code],
-                NativeKeyCode::Windows(code) => list!["Windows", code],
-                NativeKeyCode::Xkb(code) => list!["Xkb", code],
+                NativeKeyCode::Unidentified => list![sym!(Unidentified)],
+                NativeKeyCode::Android(code) => list![sym!(Android), code],
+                NativeKeyCode::MacOS(code) => list![sym!(MacOS), code],
+                NativeKeyCode::Windows(code) => list![sym!(Windows), code],
+                NativeKeyCode::Xkb(code) => list![sym!(Xkb), code],
             }
         ])
     }
@@ -251,33 +258,33 @@ impl WinitIntoSteelVal for NativeKeyCode {
 
 impl WinitIntoSteelVal for WindowId {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
-        Ok(list!["WindowId", u64::from(self).into_steelval()])
+        Ok(list![sym!(WindowId), u64::from(self).into_steelval()])
     }
 }
 
 impl WinitIntoSteelVal for StartCause {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "StartCause",
+            sym!(StartCause),
             match self {
                 StartCause::ResumeTimeReached {
                     start,
                     requested_resume,
                 } => list![
-                    "ResumeTimeReached",
-                    list!["start", start],
-                    list!["requested-resume", requested_resume]
+                    sym!(ResumeTimeReached),
+                    list![sym!(start), start],
+                    list![sym!("requested-resume"), requested_resume]
                 ],
                 StartCause::WaitCancelled {
                     start,
                     requested_resume,
                 } => list![
-                    "WaitCancelled",
-                    list!["start", start],
-                    list!["requested-resume", requested_resume]
+                    sym!(WaitCancelled),
+                    list![sym!(start), start],
+                    list![sym!("requested-resume"), requested_resume]
                 ],
-                StartCause::Poll => list!["Poll"],
-                StartCause::Init => list!["Init"],
+                StartCause::Poll => list![sym!(Poll)],
+                StartCause::Init => list![sym!(Init)],
             }
         ])
     }
@@ -286,12 +293,12 @@ impl WinitIntoSteelVal for StartCause {
 impl WinitIntoSteelVal for Ime {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "Ime",
+            sym!(Ime),
             match self {
-                Ime::Enabled => list!["Enabled"],
-                Ime::Preedit(string, cursor) => list!["Preedit", string, cursor],
-                Ime::Commit(string) => list!["Commit", string],
-                Ime::Disabled => list!["Disabled"],
+                Ime::Enabled => list![sym!(Enabled)],
+                Ime::Preedit(string, cursor) => list![sym!(Preedit), string, cursor],
+                Ime::Commit(string) => list![sym!(Commit), string],
+                Ime::Disabled => list![sym!(Disabled)],
             }
         ])
     }
@@ -303,12 +310,13 @@ where
 {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "Key",
+            sym!(Key),
             match self {
-                Key::Named(named_key) => list!["Named", named_key.into_steelval()],
-                Key::Character(char) => list!["Character", char.to_string()],
-                Key::Unidentified(native_key) => list!["Unidentified", native_key.into_steelval()],
-                Key::Dead(char) => list!["Dead", char],
+                Key::Named(named_key) => list![sym!(Named), named_key.into_steelval()],
+                Key::Character(char) => list![sym!(Character), char.to_string()],
+                Key::Unidentified(native_key) =>
+                    list![sym!(Unidentified), native_key.into_steelval()],
+                Key::Dead(char) => list![sym!(Dead), char],
             }
         ])
     }
@@ -319,12 +327,12 @@ impl WinitIntoSteelVal for NativeKey {
         Ok(list![
             "NativeKey",
             match self {
-                NativeKey::Unidentified => list!["Unidentified"],
-                NativeKey::Android(code) => list!["Android", code],
-                NativeKey::MacOS(code) => list!["MacOS", code],
-                NativeKey::Windows(code) => list!["Windows", code],
-                NativeKey::Xkb(code) => list!["Xkb", code],
-                NativeKey::Web(smol_str) => list!["Web", smol_str.to_string()],
+                NativeKey::Unidentified => list![sym!(Unidentified)],
+                NativeKey::Android(code) => list![sym!(Android), code],
+                NativeKey::MacOS(code) => list![sym!(MacOS), code],
+                NativeKey::Windows(code) => list![sym!(Windows), code],
+                NativeKey::Xkb(code) => list![sym!(Xkb), code],
+                NativeKey::Web(smol_str) => list![sym!(Web), smol_str.to_string()],
             }
         ])
     }
@@ -332,19 +340,19 @@ impl WinitIntoSteelVal for NativeKey {
 
 impl WinitIntoSteelVal for NamedKey {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
-        Ok(list!["NamedKey", self.to_text()])
+        Ok(list![sym!(NamedKey), self.to_text()])
     }
 }
 
 impl WinitIntoSteelVal for KeyLocation {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "KeyLocation",
+            sym!(KeyLocation),
             match self {
-                KeyLocation::Standard => list!["Standard"],
-                KeyLocation::Left => list!["Left"],
-                KeyLocation::Right => list!["Right"],
-                KeyLocation::Numpad => list!["Numpad"],
+                KeyLocation::Standard => list![sym!(Standard)],
+                KeyLocation::Left => list![sym!(Left)],
+                KeyLocation::Right => list![sym!(Right)],
+                KeyLocation::Numpad => list![sym!(Numpad)],
             }
         ])
     }
@@ -353,13 +361,13 @@ impl WinitIntoSteelVal for KeyLocation {
 impl WinitIntoSteelVal for KeyEvent {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "KeyEvent",
-            list!["physical-key", self.physical_key.into_steelval()],
-            list!["logical-key", self.logical_key.into_steelval()],
-            list!["text", self.text.map(|str| str.to_string())],
-            list!["location", self.location.into_steelval()],
-            list!["state", self.state.into_steelval()],
-            list!["repeat", self.repeat]
+            sym!(KeyEvent),
+            list![sym!("physical-key"), self.physical_key.into_steelval()],
+            list![sym!("logical-key"), self.logical_key.into_steelval()],
+            list![sym!(text), self.text.map(|str| str.to_string())],
+            list![sym!(location), self.location.into_steelval()],
+            list![sym!(state), self.state.into_steelval()],
+            list![sym!(repeat), self.repeat]
         ])
     }
 }
@@ -367,14 +375,14 @@ impl WinitIntoSteelVal for KeyEvent {
 impl WinitIntoSteelVal for MouseButton {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "MouseButton",
+            sym!(MouseButton),
             match self {
-                MouseButton::Left => list!["Left"],
-                MouseButton::Right => list!["Right"],
-                MouseButton::Middle => list!["Middle"],
-                MouseButton::Back => list!["Back"],
-                MouseButton::Forward => list!["Forward"],
-                MouseButton::Other(code) => list!["Other", code],
+                MouseButton::Left => list![sym!(Left)],
+                MouseButton::Right => list![sym!(Right)],
+                MouseButton::Middle => list![sym!(Middle)],
+                MouseButton::Back => list![sym!(Back)],
+                MouseButton::Forward => list![sym!(Forward)],
+                MouseButton::Other(code) => list![sym!(Other), code],
             }
         ])
     }
@@ -383,12 +391,15 @@ impl WinitIntoSteelVal for MouseButton {
 impl WinitIntoSteelVal for Touch {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "Touch",
-            list!["device-id", self.device_id.into_steelval()],
-            list!["phase", self.phase.into_steelval()],
-            list!["location", self.location.into_steelval()],
-            list!["force", self.force.map(WinitIntoSteelVal::into_steelval)],
-            list!["id", self.id]
+            sym!(Touch),
+            list![sym!("device-id"), self.device_id.into_steelval()],
+            list![sym!(phase), self.phase.into_steelval()],
+            list![sym!(location), self.location.into_steelval()],
+            list![
+                sym!(force),
+                self.force.map(WinitIntoSteelVal::into_steelval)
+            ],
+            list![sym!(id), self.id]
         ])
     }
 }
@@ -396,12 +407,12 @@ impl WinitIntoSteelVal for Touch {
 impl WinitIntoSteelVal for TouchPhase {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "TouchPhase",
+            sym!(TouchPhase),
             match self {
-                TouchPhase::Started => list!["Started"],
-                TouchPhase::Moved => list!["Moved"],
-                TouchPhase::Ended => list!["Ended"],
-                TouchPhase::Cancelled => list!["Cancelled"],
+                TouchPhase::Started => list![sym!(Started)],
+                TouchPhase::Moved => list![sym!(Moved)],
+                TouchPhase::Ended => list![sym!(Ended)],
+                TouchPhase::Cancelled => list![sym!(Cancelled)],
             }
         ])
     }
@@ -410,19 +421,19 @@ impl WinitIntoSteelVal for TouchPhase {
 impl WinitIntoSteelVal for Force {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "Force",
+            sym!(Force),
             match self {
                 Force::Calibrated {
                     force,
                     max_possible_force,
                     altitude_angle,
                 } => list![
-                    "Calibrated",
-                    list!["force", force],
-                    list!["max-possible-force", max_possible_force],
-                    list!["altitude-angle", altitude_angle]
+                    sym!(Calibrated),
+                    list![sym!(force), force],
+                    list![sym!("max-possible-force"), max_possible_force],
+                    list![sym!("altitude-angle"), altitude_angle]
                 ],
-                Force::Normalized(force) => list!["Normalized", force],
+                Force::Normalized(force) => list![sym!(Normalized), force],
             }
         ])
     }
@@ -431,10 +442,10 @@ impl WinitIntoSteelVal for Force {
 impl WinitIntoSteelVal for Theme {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "Theme",
+            sym!(Theme),
             match self {
-                Theme::Light => list!["Light"],
-                Theme::Dark => list!["Dark"],
+                Theme::Light => list![sym!(Light)],
+                Theme::Dark => list![sym!(Dark)],
             }
         ])
     }
@@ -442,105 +453,107 @@ impl WinitIntoSteelVal for Theme {
 
 impl WinitIntoSteelVal for WindowButtons {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
-        Ok(list!["WindowButtons", self.bits()])
+        Ok(list![sym!(WindowButtons), self.bits()])
     }
 }
 
 impl WinitIntoSteelVal for WindowEvent {
     fn into_steelval(self) -> Result<SteelVal, SteelErr> {
         Ok(list![
-            "WindowEvent",
+            sym!(WindowEvent),
             match self {
                 WindowEvent::ActivationTokenDone { serial, token } => list![
-                    "ActivationTokenDone",
-                    list!["serial", serial.into_steelval()],
-                    list!["token", token.into_steelval()]
+                    sym!(ActivationTokenDone),
+                    list![sym!(serial), serial.into_steelval()],
+                    list![sym!(token), token.into_steelval()]
                 ],
                 WindowEvent::Resized(physical_size) =>
-                    list!["Resized", physical_size.into_steelval()],
+                    list![sym!(Resized), physical_size.into_steelval()],
                 WindowEvent::Moved(physical_position) => {
-                    list!["Moved", physical_position.into_steelval()]
+                    list![sym!(Moved), physical_position.into_steelval()]
                 }
-                WindowEvent::CloseRequested => list!["CloseRequested"],
-                WindowEvent::Destroyed => list!["Destroyed"],
-                WindowEvent::DroppedFile(path_buf) => list!["DroppedFile", path_buf],
-                WindowEvent::HoveredFile(path_buf) => list!["HoveredFile", path_buf],
-                WindowEvent::HoveredFileCancelled => list!["HoveredFileCancelled"],
-                WindowEvent::Focused(focused) => list!["Focused", focused],
+                WindowEvent::CloseRequested => list![sym!(CloseRequested)],
+                WindowEvent::Destroyed => list![sym!(Destroyed)],
+                WindowEvent::DroppedFile(path_buf) => list![sym!(DroppedFile), path_buf],
+                WindowEvent::HoveredFile(path_buf) => list![sym!(HoveredFile), path_buf],
+                WindowEvent::HoveredFileCancelled => list![sym!(HoveredFileCancelled)],
+                WindowEvent::Focused(focused) => list![sym!(Focused), focused],
                 WindowEvent::KeyboardInput {
                     device_id,
                     event,
                     is_synthetic,
                 } => list![
-                    "KeyboardInput",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["event", event.into_steelval()],
-                    list!["is-synthetic", is_synthetic]
+                    sym!(KeyboardInput),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(event), event.into_steelval()],
+                    list![sym!("is-synthetic"), is_synthetic]
                 ],
                 WindowEvent::ModifiersChanged(modifiers) => {
-                    list!["ModifiersChanged", modifiers.into_steelval()]
+                    list![sym!(ModifiersChanged), modifiers.into_steelval()]
                 }
-                WindowEvent::Ime(ime) => list!["Ime", ime.into_steelval()],
+                WindowEvent::Ime(ime) => list![sym!(Ime), ime.into_steelval()],
                 WindowEvent::CursorMoved {
                     device_id,
                     position,
                 } => list![
-                    "CursorMoved",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["position", position.into_steelval()]
+                    sym!(CursorMoved),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(position), position.into_steelval()]
                 ],
                 WindowEvent::CursorEntered { device_id } => {
                     list![
-                        "CursorEntered",
-                        list!["device-id", device_id.into_steelval()]
+                        sym!(CursorEntered),
+                        list![sym!("device-id"), device_id.into_steelval()]
                     ]
                 }
-                WindowEvent::CursorLeft { device_id } =>
-                    list!["CursorLeft", list!["device-id", device_id.into_steelval()]],
+                WindowEvent::CursorLeft { device_id } => list![
+                    sym!(CursorLeft),
+                    list![sym!("device-id"), device_id.into_steelval()]
+                ],
                 WindowEvent::MouseWheel {
                     device_id,
                     delta,
                     phase,
                 } => list![
-                    "MouseWheel",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["delta", delta.into_steelval()],
-                    list!["phase", phase.into_steelval()]
+                    sym!(MouseWheel),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(delta), delta.into_steelval()],
+                    list![sym!(phase), phase.into_steelval()]
                 ],
                 WindowEvent::MouseInput {
                     device_id,
                     state,
                     button,
                 } => list![
-                    "MouseInput",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["state", state.into_steelval()],
-                    list!["button", button.into_steelval()]
+                    sym!(MouseInput),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(state), state.into_steelval()],
+                    list![sym!(button), button.into_steelval()]
                 ],
                 WindowEvent::PinchGesture {
                     device_id,
                     delta,
                     phase,
                 } => list![
-                    "PinchGesture",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["delta", delta],
-                    list!["phase", phase.into_steelval()]
+                    sym!(PinchGesture),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(delta), delta],
+                    list![sym!(phase), phase.into_steelval()]
                 ],
                 WindowEvent::PanGesture {
                     device_id,
                     delta,
                     phase,
                 } => list![
-                    "PanGesture",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["delta", delta.into_steelval()],
-                    list!["phase", phase.into_steelval()]
+                    sym!(PanGesture),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(delta), delta.into_steelval()],
+                    list![sym!(phase), phase.into_steelval()]
                 ],
                 WindowEvent::DoubleTapGesture { device_id } => {
                     list![
-                        "DoubleTapGesture",
-                        list!["device-id", device_id.into_steelval()]
+                        sym!(DoubleTapGesture),
+                        list![sym!("device-id"), device_id.into_steelval()]
                     ]
                 }
                 WindowEvent::RotationGesture {
@@ -548,43 +561,44 @@ impl WinitIntoSteelVal for WindowEvent {
                     delta,
                     phase,
                 } => list![
-                    "RotationGesture",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["delta", delta],
-                    list!["phase", phase.into_steelval()]
+                    sym!(RotationGesture),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(delta), delta],
+                    list![sym!(phase), phase.into_steelval()]
                 ],
                 WindowEvent::TouchpadPressure {
                     device_id,
                     pressure,
                     stage,
                 } => list![
-                    "TouchpadPressure",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["pressure", pressure],
-                    list!["stage", stage]
+                    sym!(TouchpadPressure),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(pressure), pressure],
+                    list![sym!(stage), stage]
                 ],
                 WindowEvent::AxisMotion {
                     device_id,
                     axis,
                     value,
                 } => list![
-                    "AxisMotion",
-                    list!["device-id", device_id.into_steelval()],
-                    list!["axis", axis],
-                    list!["value", value]
+                    sym!(AxisMotion),
+                    list![sym!("device-id"), device_id.into_steelval()],
+                    list![sym!(axis), axis],
+                    list![sym!(value), value]
                 ],
                 WindowEvent::Touch(touch) => list!["Touch", touch.into_steelval()],
                 WindowEvent::ScaleFactorChanged {
                     scale_factor,
                     inner_size_writer,
                 } => list![
-                    "ScaleFactorChanged",
-                    list!["scale-factor", scale_factor],
-                    list!["inner-size-writer", inner_size_writer.into_steelval()]
+                    sym!(ScaleFactorChanged),
+                    list![sym!("scale-factor"), scale_factor],
+                    list![sym!("inner-size-writer"), inner_size_writer.into_steelval()]
                 ],
-                WindowEvent::ThemeChanged(theme) => list!["ThemeChanged", theme.into_steelval()],
-                WindowEvent::Occluded(occluded) => list!["Occluded", occluded],
-                WindowEvent::RedrawRequested => list!["RedrawRequested"],
+                WindowEvent::ThemeChanged(theme) =>
+                    list![sym!(ThemeChanged), theme.into_steelval()],
+                WindowEvent::Occluded(occluded) => list![sym!(Occluded), occluded],
+                WindowEvent::RedrawRequested => list![sym!(RedrawRequested)],
             }
         ])
     }

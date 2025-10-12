@@ -106,7 +106,7 @@ impl WinitFromSteelVal for WindowAttributes {
             .into_iter()
             .map(|val| {
                 let list = val.list().unwrap();
-                let head = list.car().unwrap().as_string().unwrap().to_string();
+                let head = list.car().unwrap().as_symbol().unwrap().to_string();
                 let tail = list.cdr().unwrap().car().unwrap();
                 (head, tail)
             })

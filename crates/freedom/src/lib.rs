@@ -42,3 +42,14 @@ pub fn run_result<P: AsRef<OsStr>, Q: AsRef<OsStr>, R: AsRef<OsStr>>(
     // Done
     Ok(())
 }
+
+/// Create a Steel symbol from a Rust identifier or string literal
+#[macro_export]
+macro_rules! sym {
+    ($ident:ident) => {
+        SteelVal::SymbolV(stringify!($ident).into())
+    };
+    ($str:expr) => {
+        SteelVal::SymbolV($str.into())
+    };
+}
