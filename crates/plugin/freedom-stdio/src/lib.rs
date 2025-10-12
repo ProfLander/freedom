@@ -1,4 +1,7 @@
-use freedom::scheme::steel::steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn};
+use freedom::{
+    plugins::plugin::PluginInterface,
+    scheme::steel::steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+};
 
 #[unsafe(no_mangle)]
 pub fn module() -> BuiltInModule {
@@ -14,4 +17,12 @@ pub async fn stdout_write() {
 
 pub async fn stdin_read() -> String {
     todo!()
+}
+
+#[unsafe(no_mangle)]
+pub fn plugin() -> PluginInterface {
+    PluginInterface {
+        init: || (),
+        module,
+    }
 }

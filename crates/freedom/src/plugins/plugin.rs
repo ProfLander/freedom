@@ -1,7 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use libloading::Symbol;
-
 use crate::{
     log::info,
     plugins::dylib::Dylib,
@@ -10,6 +8,11 @@ use crate::{
         steel::{rvals::Custom, steel_vm::builtin::BuiltInModule, steelerr},
     },
 };
+
+pub struct PluginInterface {
+    pub init: fn(),
+    pub module: fn() -> BuiltInModule,
+}
 
 // Interface to a reloadable rust dylib exposing a Steel module
 pub struct Plugin {
@@ -38,20 +41,22 @@ impl Plugin {
     }
 
     pub fn load(&mut self) -> Result<()> {
-        info!("Plugin::module");
+        info!("Plugin::load");
         let lib = Dylib::new(&self.path)?;
 
         info!("Dropping existing dylib...");
         drop(self.loaded.take());
 
-        info!("Extracting init symbol...");
-        if let Ok(init) = unsafe { lib.get::<fn()>(b"init") } {
-            init();
-        }
-
-        info!("Extracting module symbol...");
-        let module: Symbol<fn() -> BuiltInModule> =
-            unsafe { lib.get(b"module").or_else(|e| steelerr!(Io => e))? };
+        info!("Extracting plugin interface...");
+        let plugin = unsafe { lib.get::<fn() -> PluginInterface>(b"plugin") };
+        let plugin = plugin.or_else(|e| steelerr!(Generic => e))?;
+        let PluginInterface {
+            init,
+            module,
+        } = plugin();
+        
+        info!("Initializing...");
+        init();
 
         info!("Constructing module...");
         let module = module();
