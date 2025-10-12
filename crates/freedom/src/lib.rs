@@ -1,15 +1,14 @@
 pub mod r#async;
+pub mod fs;
 pub mod log;
 pub mod plugins;
 pub mod scheme;
-pub mod scripts;
-pub mod fs;
 
 use std::ffi::OsStr;
 
-use r#async::smol::block_on;
 use log::handle_error;
 use scheme::Result;
+use steel::throw;
 
 pub fn run<P: AsRef<OsStr>, Q: AsRef<OsStr>, R: AsRef<OsStr>>(
     plugin_dir: P,
@@ -30,11 +29,20 @@ pub fn run_result<P: AsRef<OsStr>, Q: AsRef<OsStr>, R: AsRef<OsStr>>(
     // Setup plugins
     plugins::init(&plugin_dir)?;
 
-    // Setup scripts
-    scripts::init(&script_dir)?;
-
     // Run main script
-    block_on(scripts::run(&entrypoint))?;
+    scheme::with_engine_mut(|engine| {
+        engine.run(format!(
+            "(require \"{}/{}\")",
+            script_dir
+                .as_ref()
+                .to_str()
+                .ok_or_else(throw!(Generic => "Failed to convert script dir to string slice"))?,
+            entrypoint
+                .as_ref()
+                .to_str()
+                .ok_or_else(throw!(Generic => "Failed to convert entrypoint to string slice"))?
+        ))
+    })?;
 
     // Run async engine to completion
     r#async::run();

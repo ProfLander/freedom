@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use log::debug;
 
 use crate::{
-    log::info,
     plugins::dylib::Dylib,
     scheme::{
         Result,

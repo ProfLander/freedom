@@ -5,7 +5,7 @@ pub use smol;
 use smol::LocalExecutor;
 
 use crate::{
-    log::{handle_error, info},
+    log::{handle_error},
     scheme::{
         Result,
         program::Program,

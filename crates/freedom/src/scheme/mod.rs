@@ -1,6 +1,8 @@
 pub mod engine;
 pub mod program;
 
+use std::path::PathBuf;
+
 pub use steel;
 
 use crate::log::info;
@@ -23,7 +25,6 @@ thread_local! {
             .register_module(crate::log::module())
             .register_module(crate::r#async::module().unwrap())
             .register_module(crate::fs::module())
-            .register_module(crate::scripts::module())
             .register_module(crate::plugins::module());
         engine
     };
@@ -31,10 +32,10 @@ thread_local! {
 
 fn module() -> BuiltInModule {
     let mut module = BuiltInModule::new("freedom/scheme");
-    module.register_fn("#%compile", |src: SteelVal| {
+    module.register_fn("#%compile", |src: String, path: String| {
         SteelVal::FutureV(Gc::new(FutureResult::new(Box::pin(async move {
             crate::scheme::with_engine_mut(|engine| {
-                Program::new(engine.emit_raw_program_no_path(src.to_string())?).into_steelval()
+                Program::new(engine.emit_raw_program(src, PathBuf::from(path))?).into_steelval()
             })
         }))))
     });

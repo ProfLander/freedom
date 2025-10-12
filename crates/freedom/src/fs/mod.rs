@@ -16,7 +16,7 @@ use crate::{
     Result,
     r#async::smol::channel::unbounded,
     fs::into_steelval::FsIntoSteelVal,
-    log::{handle_error, info},
+    log::{handle_error},
     scheme::{steel::steelerr, steel_future},
 };
 use notify_debouncer_full::{

@@ -63,7 +63,15 @@ impl FsIntoSteelVal for Event {
             sym!(Event),
             list![
                 list![sym!(kind), self.kind.clone().into_steelval()?],
-                list![sym!(path), self.paths.clone().into_steelval()?],
+                list![
+                    sym!(path),
+                    self.paths
+                        .clone()
+                        .into_iter()
+                        .map(|path| path.to_string_lossy().to_string())
+                        .collect::<Vec<_>>()
+                        .into_steelval()?
+                ],
                 list![sym!(attrs), self.attrs.into_steelval()?]
             ]
         ])

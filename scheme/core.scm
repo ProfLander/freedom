@@ -1,16 +1,11 @@
-(provide script compile #%require-plugin)
+(provide compile #%compile #%require-plugin)
 
 (require-builtin freedom/scheme)
-(require-builtin freedom/scripts)
 (require-builtin freedom/plugins)
-
-(define-syntax script
-  (syntax-rules []
-    [(_ name) (await (#%get-script (quote name)))]))
 
 (define-syntax compile
   (syntax-rules []
-    [(compile . body) (#%compile (quote . body))]))
+    [(_ . body) (#%compile (quote . body))]))
 
 (define-syntax #%require-plugin
   (syntax-rules [only-in]

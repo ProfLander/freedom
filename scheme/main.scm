@@ -1,8 +1,7 @@
-(require "core.scm")
 (require "async.scm")
-(require "file-watcher.scm")
+(require "scripts.scm")
 
 (spawn
-  (script print-loop)
-  (script repl)
-  (script winit))
+  (get-script 'print-loop)
+  (get-script 'repl)
+  (get-script 'winit))

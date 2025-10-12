@@ -1,5 +1,7 @@
 (require "core.scm")
 (require "async.scm")
+(require "scripts.scm")
+
 (require-builtin freedom/log)
 
 (call-with-exception-handler
@@ -10,4 +12,4 @@
     (flush-output-port (current-output-port))
     (displayln (eval-string (read-line)))))
 
-(spawn (script repl))
+(spawn (get-script 'repl))
