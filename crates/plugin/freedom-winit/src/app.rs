@@ -112,7 +112,6 @@ impl App {
         mut args: Vec<SteelVal>,
     ) -> Result<SteelVal> {
         if !matches!(callback, SteelVal::BoolV(false)) {
-            println!("callback: {callback:?}");
             let el = EventLoop::new();
             args.insert(0, el.clone().into_steelval()?);
             let res = freedom::scheme::with_engine_mut(|engine| {
@@ -120,7 +119,6 @@ impl App {
                 Ok(res) as Result<SteelVal>
             })?;
             el.apply(event_loop);
-            println!("res: {res}");
             return Ok(res);
         }
         Ok(SteelVal::Void)

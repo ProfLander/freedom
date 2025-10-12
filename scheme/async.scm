@@ -25,6 +25,5 @@
     [(spawn exp ...) (begin (#%spawn exp) ...)]))
 
 (let ([cc (current-continuation)])
-  (if (continuation? cc)
-    (set! halt (lambda () (cc void)))
-    (displayln "halting")))
+  (when (continuation? cc)
+    (set! halt (lambda () (cc void)))))

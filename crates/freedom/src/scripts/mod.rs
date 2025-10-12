@@ -17,7 +17,9 @@ use crate::{
     },
 };
 
+use log::debug;
 use scripts::Scripts;
+use steel::{steelerr, throw};
 
 thread_local! {
     static SCRIPTS: Scripts = Scripts::new();
@@ -37,7 +39,12 @@ pub fn module() -> BuiltInModule {
 }
 
 pub async fn run<P: AsRef<OsStr>>(name: &P) -> Result<Vec<SteelVal>> {
-    info!("Running {:?}", name.as_ref());
+    debug!(
+        "Running {}",
+        name.as_ref().to_str().ok_or_else(
+            throw!(Generic => "Failed to convert path to string slice: {:?}", name.as_ref())
+        )?
+    );
     let main = get_script(name).await?;
     crate::scheme::with_engine_mut(|engine| engine.run_raw_program(main.unwrap()))
 }
@@ -50,14 +57,10 @@ pub async fn get_script<P: AsRef<OsStr>>(name: P) -> Result<Program> {
             let script = scripts.load_script(&name)?;
 
             scripts.insert(name.as_ref().to_os_string(), script.clone());
-            script.1
+            script
         };
         Ok(Program::new(prog)) as Result<_>
     })?;
 
     Ok(prog)
-}
-
-pub fn source(name: &str) -> Result<Cow<'static, str>> {
-    SCRIPTS.with(|scripts| scripts.source(name))
 }

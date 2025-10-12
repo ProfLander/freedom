@@ -1,5 +1,7 @@
 use std::path::{Path, PathBuf};
 
+use log::debug;
+
 use crate::{
     log::info,
     plugins::dylib::Dylib,
@@ -41,24 +43,21 @@ impl Plugin {
     }
 
     pub fn load(&mut self) -> Result<()> {
-        info!("Plugin::load");
+        debug!("Plugin::load");
         let lib = Dylib::new(&self.path)?;
 
-        info!("Dropping existing dylib...");
+        debug!("Dropping existing dylib...");
         drop(self.loaded.take());
 
-        info!("Extracting plugin interface...");
+        debug!("Extracting plugin interface...");
         let plugin = unsafe { lib.get::<fn() -> PluginInterface>(b"plugin") };
         let plugin = plugin.or_else(|e| steelerr!(Generic => e))?;
-        let PluginInterface {
-            init,
-            module,
-        } = plugin();
-        
-        info!("Initializing...");
+        let PluginInterface { init, module } = plugin();
+
+        debug!("Initializing...");
         init();
 
-        info!("Constructing module...");
+        debug!("Constructing module...");
         let module = module();
 
         // Inject dylib into module for lifetime control

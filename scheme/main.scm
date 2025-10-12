@@ -1,5 +1,6 @@
 (require "core.scm")
 (require "async.scm")
+(require "file-watcher.scm")
 
 (spawn
   (script print-loop)

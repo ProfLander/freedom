@@ -22,6 +22,7 @@ thread_local! {
         engine.borrow_mut().register_module(module())
             .register_module(crate::log::module())
             .register_module(crate::r#async::module().unwrap())
+            .register_module(crate::fs::module())
             .register_module(crate::scripts::module())
             .register_module(crate::plugins::module());
         engine

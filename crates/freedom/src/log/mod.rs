@@ -15,12 +15,19 @@ pub fn init() {
     init_local();
 }
 
+pub fn steelval_to_string(val: &SteelVal) -> String {
+    match val {
+        SteelVal::StringV(str) => str.to_string(),
+        _ => format!("{val:?}"),
+    }
+}
+
 pub fn module() -> BuiltInModule {
     let mut module = BuiltInModule::new("freedom/log");
     module.register_native_fn(
         "trace!",
         |args: &[SteelVal]| {
-            trace!("{}", args.iter().map(ToString::to_string).join(" "));
+            trace!("{}", args.iter().map(steelval_to_string).join(" "));
             Ok(SteelVal::Void)
         },
         Arity::AtLeast(1),
@@ -28,7 +35,7 @@ pub fn module() -> BuiltInModule {
     module.register_native_fn(
         "info!",
         |args: &[SteelVal]| {
-            info!("{}", args.iter().map(ToString::to_string).join(" "));
+            info!("{}", args.iter().map(steelval_to_string).join(" "));
             Ok(SteelVal::Void)
         },
         Arity::AtLeast(1),
@@ -36,7 +43,7 @@ pub fn module() -> BuiltInModule {
     module.register_native_fn(
         "debug!",
         |args: &[SteelVal]| {
-            debug!("{}", args.iter().map(ToString::to_string).join(" "));
+            debug!("{}", args.iter().map(steelval_to_string).join(" "));
             Ok(SteelVal::Void)
         },
         Arity::AtLeast(1),
@@ -44,7 +51,7 @@ pub fn module() -> BuiltInModule {
     module.register_native_fn(
         "warn!",
         |args: &[SteelVal]| {
-            warn!("{}", args.iter().map(ToString::to_string).join(" "));
+            warn!("{}", args.iter().map(steelval_to_string).join(" "));
             Ok(SteelVal::Void)
         },
         Arity::AtLeast(1),
@@ -52,7 +59,7 @@ pub fn module() -> BuiltInModule {
     module.register_native_fn(
         "error!",
         |args: &[SteelVal]| {
-            error!("{}", args.iter().map(ToString::to_string).join(" "));
+            error!("{}", args.iter().map(steelval_to_string).join(" "));
             Ok(SteelVal::Void)
         },
         Arity::AtLeast(1),

@@ -1,7 +1,6 @@
 (require "core.scm")
 (require "async.scm")
 
-(require-builtin freedom/log)
 (require-builtin freedom/async)
 
 (#%require-plugin freedom_winit (only-in #%winit-run))
@@ -19,30 +18,32 @@
 (define init
   (program
     (require "scheme/async.scm")
+    
+    (require-builtin freedom/log)
 
     (define [*resumed* el]
-      (displayln "resumed:" el))
+      (info! "resumed"))
 
     (define [*suspended* el]
-      (displayln "suspended:" el))
+      (info! "suspended"))
 
     (define [*new-events* el cause]
-      (displayln "new events:" el cause))
+      (info! "new events:" cause))
 
     (define [*device-event* el dev ev]
-      (displayln "device event:" el dev ev))
+      (info! dev ev))
 
     (define [*window-event* el win ev]
-      (displayln "window event:" el win ev))
+      (info! win ev))
 
     (define [*about-to-wait* el]
-      (displayln "about to wait:" el))
+      (info! "about to wait"))
 
     (define [*exiting* el]
-      (displayln "exiting:" el))
+      (info! "exiting"))
 
     (define [*memory-warning* el]
-      (displayln "memory warning:" el))))
+      (info! "memory warning"))))
 
 (info! "Starting winit...")
 (spawn

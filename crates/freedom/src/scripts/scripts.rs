@@ -21,7 +21,7 @@ use crate::{
 };
 
 pub struct Scripts {
-    scripts: RefCell<BTreeMap<Cow<'static, OsStr>, (Cow<'static, str>, RawProgramWithSymbols)>>,
+    scripts: RefCell<BTreeMap<Cow<'static, OsStr>, RawProgramWithSymbols>>,
     watcher: OnceCell<(PathBuf, Debouncer<ReadDirectoryChangesWatcher, FileIdMap>)>,
 }
 
@@ -37,13 +37,13 @@ impl Scripts {
         self.scripts
             .borrow()
             .get(name.as_ref())
-            .map(|(_, prog)| prog.clone())
+            .map(|prog| prog.clone())
     }
 
     pub fn insert<P: Into<Cow<'static, OsStr>>>(
         &self,
         name: P,
-        script: (Cow<'static, str>, RawProgramWithSymbols),
+        script: RawProgramWithSymbols,
     ) {
         self.scripts.borrow_mut().insert(name.into(), script);
     }
@@ -100,7 +100,7 @@ impl Scripts {
     pub fn load_script<P: AsRef<OsStr>>(
         &self,
         name: &P,
-    ) -> Result<(Cow<'static, str>, RawProgramWithSymbols)> {
+    ) -> Result<RawProgramWithSymbols> {
         let mut path = PathBuf::new();
         path.push(self.path());
         path.push(Path::new(name));
@@ -110,15 +110,6 @@ impl Scripts {
             Cow::Owned(std::fs::read_to_string(&path).or_else(|e| steelerr!(Generic => e))?);
         let prog =
             crate::scheme::with_engine_mut(|engine| engine.emit_raw_program(src.clone(), path))?;
-        Ok((src, prog))
-    }
-
-    pub fn source<T: AsRef<OsStr>>(&self, name: T) -> Result<Cow<'static, str>> {
-        let name = name.as_ref();
-        self.scripts
-            .borrow()
-            .get(name)
-            .map(|(src, _)| src.clone())
-            .ok_or_else(throw!(Generic => "No script with name: {:?}", name))
+        Ok(prog)
     }
 }

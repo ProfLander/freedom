@@ -5,11 +5,15 @@ use std::{
 };
 
 use libloading::Library;
+use log::debug;
 
-use crate::{err, log::{handle_error, handle_error_with, info}};
 use crate::scheme::{
     Result,
     steel::{rvals::Custom, steelerr, throw},
+};
+use crate::{
+    err,
+    log::{handle_error, handle_error_with},
 };
 
 // Handle to a temporary copy of a dynamic library
@@ -32,7 +36,7 @@ impl Custom for Dylib {}
 impl Dylib {
     pub fn new<P: AsRef<Path>>(src: &P) -> Result<Self> {
         let src: &Path = src.as_ref();
-        info!("Dylib::new({src:?})");
+        debug!("Dylib::new({src:?})");
 
         let mut dest = PathBuf::from(std::env::temp_dir());
         handle_error_with(|| {
@@ -49,10 +53,10 @@ impl Dylib {
             ))
         });
 
-        info!("Copying to tempfile at {dest:?}...");
+        debug!("Copying to tempfile at {dest:?}...");
         std::fs::copy(&src, &dest)?;
 
-        info!("Loading...");
+        debug!("Loading...");
         let lib = unsafe { Library::new(&dest).or_else(|e| steelerr!(Io => e))? };
         let lib = ManuallyDrop::new(lib);
 
@@ -62,10 +66,10 @@ impl Dylib {
 
 impl Drop for Dylib {
     fn drop(&mut self) {
-        info!("Dropping library handle...");
+        debug!("Dropping library handle...");
         unsafe { ManuallyDrop::drop(&mut self.lib) };
 
-        info!("Removing tempfile at {:?}...", self.path);
+        debug!("Removing tempfile at {:?}...", self.path);
         handle_error(std::fs::remove_file(&self.path).or_else(|e| steelerr!(Io => e)))
     }
 }

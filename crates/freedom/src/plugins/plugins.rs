@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::fs::{
-    Watcher,
+    Debouncer,
     notify_debouncer_full::notify::{EventKind, RecursiveMode},
 };
 use crate::log::{handle_error, info};
@@ -21,7 +21,7 @@ use crate::{plugins::PLUGINS, plugins::plugin::Plugin};
 pub struct Plugins {
     search_path: PathBuf,
     pub(crate) plugins: RefCell<BTreeMap<String, Plugin>>,
-    _watcher: Watcher,
+    _debouncer: Debouncer,
 }
 
 impl Plugins {
@@ -32,7 +32,7 @@ impl Plugins {
         Ok(Plugins {
             search_path,
             plugins: RefCell::new(Default::default()),
-            _watcher: watcher,
+            _debouncer: watcher,
         })
     }
 
@@ -40,7 +40,7 @@ impl Plugins {
         self.search_path.as_path()
     }
 
-    pub fn watch<P>(path: P) -> Result<Watcher>
+    pub fn watch<P>(path: P) -> Result<Debouncer>
     where
         P: AsRef<Path> + 'static,
     {

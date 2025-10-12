@@ -67,7 +67,7 @@ macro_rules! opaque_wrappers {
 
             impl freedom::scheme::steel::rvals::Custom for $name {
                 fn fmt(&self) -> Option<Result<String, std::fmt::Error>> {
-                    Some(Ok(format!("#%<{}>", stringify!($inner)).into()))
+                    Some(Ok(format!("#%<{:?}>", self.0).into()))
                 }
 
                 fn equality_hint(&self, other: &dyn freedom::scheme::steel::rvals::CustomType) -> bool {

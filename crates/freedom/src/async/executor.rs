@@ -1,4 +1,5 @@
 use async_executor::StaticLocalExecutor;
+use log::debug;
 pub use smol;
 
 use smol::LocalExecutor;
@@ -46,33 +47,33 @@ impl Executor {
     pub fn spawn_value(&self, task: SteelVal) {
         match task {
             SteelVal::FutureV(fut) => {
-                info!("Spawning future");
+                debug!("Spawning future");
                 self.spawn(fut.unwrap().into_shared())
             }
             SteelVal::ListV(_) => {
-                info!("Spawning form {task}");
+                debug!("Spawning form {task}");
                 self.spawn(async move {
                     crate::scheme::with_engine_mut(|engine| {
-                        info!("Running form {task}");
+                        debug!("Running form {task}");
                         engine.run(format!("({task})"))
                     })
                 })
             }
             _ => match Program::from_steelval(&task) {
                 Ok(prog) => {
-                    info!("Spawning program {task}");
+                    debug!("Spawning program {task}");
                     self.spawn(async move {
                         crate::scheme::with_engine_mut(|engine| {
-                            info!("Running program {task:?}");
+                            debug!("Running program {task:?}");
                             engine.run_raw_program(prog.unwrap())
                         })
                     })
                 }
                 Err(_) => {
-                    info!("Spawning task {task}");
+                    debug!("Spawning task {task}");
                     self.spawn(async move {
                         crate::scheme::with_engine_mut(|engine| {
-                            info!("Running task {task:?}");
+                            debug!("Running task {task:?}");
                             engine.call_function_with_args(task, vec![])
                         })
                     })
