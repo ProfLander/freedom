@@ -19,5 +19,4 @@
   (spawn
     (lambda ()
       (define scripts-dir (scripts-dir))
-      (info! "Starting scripts watch loop at" scripts-dir)
       (watch-loop scripts-dir #t path-relevant? apply-change))))

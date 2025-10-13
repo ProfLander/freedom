@@ -52,6 +52,7 @@
       #f)))
 
 (define [watch-loop path recursive relevant with]
+  (info! "Watching" path "for changes")
   (watch path recursive)
   (define handle-changes (event-changes relevant))
   (info! "handle-changes" handle-changes)

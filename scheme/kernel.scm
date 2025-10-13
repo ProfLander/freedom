@@ -1,6 +1,4 @@
 (require-builtin freedom/log)
-
-(#%log-init)
 (info! "Starting kernel on thread" (current-thread-id) "...")
 
 (require "scheme.scm")

@@ -22,9 +22,19 @@
 (define [plugin-path name]
   (string-append (plugins-dir) "/" (#%library-filename name)))
 
+(define [try-cleanup old-plugin]
+  (when old-plugin
+    (define tempfile (Plugin-tempfile old-plugin))
+    (info! "Dropping old plugin" old-plugin)
+    (set! old-plugin void)
+    (info! "Deleting tempfile" tempfile "...")
+    (delete-file! tempfile)))
+
 (define [%load-plugin path]
   (define plugin (#%load-plugin path))
+  (define old-plugin (hash-try-get *plugins* path))
   (set! *plugins* (hash-insert *plugins* path plugin))
+  (try-cleanup old-plugin)
   (info! "plugins:" *plugins*))
 
 (define [load-plugin name]
@@ -32,7 +42,8 @@
   (%load-plugin path))
 
 (define [%unload-plugin path]
-  (set! *plugins* (hash-remove *plugins* path)))
+  (define old-plugin (hash-remove *plugins* path))
+  (try-cleanup old-plugin))
 
 (define [unload-plugin name]
   (define path (plugin-path name))

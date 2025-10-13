@@ -1,7 +1,8 @@
-(provide #%load-plugin Plugin Plugin-builtin Plugin-library)
+(provide #%load-plugin Plugin Plugin-builtin Plugin-tempfile)
+
+(require "../fs/mod.scm")
 
 (require-builtin freedom/log)
-(require-builtin freedom/tempfile)
 (require-builtin freedom/loading)
 
 (define interface-symbol (make-parameter "plugin"))
@@ -29,28 +30,28 @@
 
 ;; Load a plugin by path
 (define [#%load-plugin path]
-  (define tempfile (TempFile path))
-  (info! "tempfile:" tempfile)
+  (info! "Loading" path "...")
+
+  (define temp-dir (temp-dir))
+  (define tempfile (string-append temp-dir (unique-id) "-" (file-name path)))
+
+  (info! "Copying" path "to tempfile at" tempfile "...");
+  (copy-file! path tempfile)
 
   ; Load the library
-  (define library (Library (TempFile-path tempfile)))
-  (info! "library:" library)
+  (define library (Library tempfile))
 
   ; Fetch its plugin interface
   (define plugin (Library-get library (interface-symbol)))
-  (info! "plugin:" plugin)
 
   ; Initialize
   (define plugin-init (plugin-init plugin))
-  (info! "calling plugin-init:" plugin-init)
   (plugin-init)
 
   ; Setup builtin module
   (define plugin-module (plugin-module plugin))
-  (info! "extracting plugin module:" plugin-module)
 
   (define module (plugin-module))
-  (info! "plugin-module:" module)
   
   ; Construct handle
   (Plugin module library tempfile))
