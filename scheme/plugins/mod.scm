@@ -4,7 +4,6 @@
 (require-builtin freedom/loading)
 
 (require "../async.scm")
-(require "../fs/mod.scm")
 (require "plugin.scm")
 
 (define *plugins* (hash))
@@ -50,6 +49,9 @@
 
 (define [plugin-module plugin]
   (Plugin-builtin plugin))
+
+;; Filesystem watcher
+(require "../fs/mod.scm")
 
 (define [path-relevant? path]
   (define path (normalize-path path))

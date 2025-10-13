@@ -1,8 +1,7 @@
 (provide load-script unload-script get-script)
 
-(require "../core.scm")
+(require "../scheme.scm")
 (require "../async.scm")
-(require "../fs/mod.scm")
 
 (require-builtin freedom/log)
 
@@ -37,6 +36,9 @@
   (when (not (hash-try-get *scripts* path))
     (%load-script path))
   (hash-get *scripts* path))
+
+;; Filesystem watcher
+(require "../fs/mod.scm")
 
 (define [path-relevant? path]
   (define path (normalize-path path))
