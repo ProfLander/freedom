@@ -7,6 +7,43 @@
   - Appears hardcoded
   - FIXED: Used an atomic bool + spawned future to guarantee each task gets one turn per sleep
 
+- [x] Move script system into Scheme
+
+- [x] Move plugin system into Scheme
+
+- [ ] Finalize self-contained runtime
+  - Logging should be initialized from Scheme as part of kernel startup
+  - Each address space that lazily constructs an engine needs it to be fully-formed and ready to go
+  - Ergo, each instance of the engine needs to start with a path to a kernel script,
+    and run it at construction time to establish a baseline environment
+  - Each instance will likely also want to run a specialized startup script, though this is case-by-case
+    - Main runs `main.scm` by convention
+    - Winit takes quoted syntax in its run method
+    - Another plugin might want to extend the kernel environment, then run a preset (or provided) entrypoint
+
+- [ ] Move FS watcher integration into a `freedom-notify` dylib
+  - Can load from kernel after starting plugin system, setup plugin + script watching late
+
+- [ ] Reintroduce threading
+  - Spawn (1 * main) + (num_cpu * worker) threads from rust
+  - Have each call `make-channels` and pass its sender to the main thread
+    - Compose a shared bus from these senders
+    - Propagate to all threads via channel as an initial sync-and-start
+      - Prevents any comms / task spawning before everything is ready
+    - Use for all inter-thread coordination
+      - i.e. A thread can send a task + its sender to another thread in order to model a callback
+  - Control from scheme
+    - Handles to initial set of threads are stored in a pool
+    - Can take from pool to assign a specialized task to a thread
+    - Can spawn a task onto the remaining threads via specialized function
+      - This should mark a thread as busy and prevent it from being taken for specialized use
+      - When all are busy, tasks should either queue, or spawn onto threads in a round-robin fashion
+        - Queueing introduces more overhead per op since threads have to sync and fetch a new task
+        - Round-robin risks spawning a short task on a thread that's already processing a long one
+          - That said, if we assume all pool tasks are properly async, this should not be a problem
+    - Attempting to take from pool when only 1 thread remains should spawn a new one
+      - Pool should always have at least 1 thread to maintain parallelism semantic
+
 - [ ] Implement async stdio
   - Blocking prevents winit from functioning properly
   - [ ] Start with basic stdin / stdout pipes
@@ -29,10 +66,6 @@
   - Expose functions to be called by winit
   - Neither should need to touch engine or executor
   - Can reuse implementations from freedom-v1
-
-- [ ] Reintroduce threading
-  - Spawn worker threads from rust
-  - Control from scheme
 
 - [ ] `build.rs` machinery for shipping scheme files in crates
   - Preferably not as raw text
