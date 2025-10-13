@@ -23,7 +23,7 @@
 (define [yield]
   (let ([cc (current-continuation)])
     (when (continuation? cc)
-      (#%spawn (lambda () (cc void)))
+      (#%spawn #%executor (lambda () (cc void)))
       (halt))))
 
 ;; Await FUT, and call the current continuation with its result
@@ -31,11 +31,11 @@
   (let ([cc (current-continuation)])
     (if (continuation? cc)
       (begin
-        (#%await fut cc)
+        (#%await #%executor fut cc)
         (halt))
       cc)))
 
 ;; Spawn a task onto the async executor
 (define-syntax spawn
   (syntax-rules []
-    [(spawn exp ...) (begin (#%spawn exp) ...)]))
+    [(spawn exp ...) (begin (#%spawn #%executor exp) ...)]))
