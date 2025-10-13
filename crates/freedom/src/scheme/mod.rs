@@ -44,8 +44,13 @@ fn module() -> BuiltInModule {
 
 pub fn init(config: SchemeConfig) -> Result<SteelVal> {
     info!("Initializing scheme on {:?}", std::thread::current().id());
+
+    // Construct engine
     let engine = Engine::new();
 
+    crate::log::init();
+
+    // Perform infallible registration
     engine
         .borrow_mut()
         .register_value("#%scheme-config", config.clone().into_steelval()?)
@@ -53,12 +58,20 @@ pub fn init(config: SchemeConfig) -> Result<SteelVal> {
         .register_module(crate::log::module())
         .register_module(crate::r#async::module().unwrap())
         .register_module(crate::loading::module())
-        .register_module(crate::tempfile::module())
-        .run(format!("(load \"{}\")", config.kernel))?;
+        .register_module(crate::fs::module());
 
+    // Emplace the engine
     ENGINE.with(|cell| {
         cell.set(engine)
             .or_else(|_| steelerr!(Generic => "Engine has already been initialized"))
+    })?;
+
+    // Run kernel
+    ENGINE.with(|cell| {
+        cell.get()
+            .unwrap()
+            .borrow_mut()
+            .run(format!("(load \"{}\")", config.kernel))
     })?;
 
     Ok(SteelVal::Void)

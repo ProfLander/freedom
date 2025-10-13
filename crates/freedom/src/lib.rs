@@ -1,8 +1,8 @@
 pub mod r#async;
+pub mod fs;
 pub mod loading;
 pub mod log;
 pub mod scheme;
-pub mod tempfile;
 
 use std::ffi::OsStr;
 
@@ -12,10 +12,9 @@ use steel::throw;
 use crate::{log::handle_error_with, scheme::SchemeConfig};
 
 pub fn run<R: AsRef<OsStr>>(config: SchemeConfig, entrypoint: R) {
-    // Start engine
-    scheme::init(config).expect("Failed to initialize Scheme");
-
     handle_error_with(|| {
+        scheme::init(config)?;
+        
         // Run main script
         scheme::with_engine_mut(|engine| {
             engine.run(format!(

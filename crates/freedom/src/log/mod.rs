@@ -18,26 +18,20 @@ pub fn steelval_to_string(val: &SteelVal) -> String {
     }
 }
 
+pub fn init() {
+    // Setup logging
+    let logger = env_logger::builder()
+        .parse_default_env()
+        .format_timestamp(None)
+        .build();
+
+    let max_level = logger.filter();
+    handle_error(log::set_boxed_logger(Box::new(logger)).or_else(|e| steelerr!(Generic => e)));
+    log::set_max_level(max_level);
+}
+
 pub fn module() -> BuiltInModule {
     let mut module = BuiltInModule::new("freedom/log");
-    module.register_native_fn(
-        "#%log-init",
-        |_: &[SteelVal]| {
-            // Setup logging
-            let logger = env_logger::builder()
-                .parse_default_env()
-                .format_timestamp(None)
-                .build();
-
-            let max_level = logger.filter();
-            handle_error(
-                log::set_boxed_logger(Box::new(logger)).or_else(|e| steelerr!(Generic => e)),
-            );
-            log::set_max_level(max_level);
-            Ok(SteelVal::Void)
-        },
-        Arity::Exact(0),
-    );
     module.register_native_fn(
         "trace!",
         |args: &[SteelVal]| {
