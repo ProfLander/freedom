@@ -7,34 +7,32 @@ pub mod tempfile;
 
 use std::ffi::OsStr;
 
-use log::handle_error;
 use scheme::Result;
 use steel::throw;
 
-pub fn run<R: AsRef<OsStr>>(entrypoint: R) {
-    handle_error(run_result(entrypoint));
-}
+use crate::{log::handle_error_with, scheme::SchemeConfig};
 
-pub fn run_result<R: AsRef<OsStr>>(entrypoint: R) -> Result<()> {
-    // Setup logging
-    log::init();
+pub fn run<R: AsRef<OsStr>>(config: SchemeConfig, entrypoint: R) {
+    // Start engine
+    scheme::init(config).expect("Failed to initialize Scheme");
 
-    // Run main script
-    scheme::with_engine_mut(|engine| {
-        engine.run(format!(
-            "(require \"{}\")",
-            entrypoint
-                .as_ref()
-                .to_str()
-                .ok_or_else(throw!(Generic => "Failed to convert entrypoint to string slice"))?
-        ))
-    })?;
+    handle_error_with(|| {
+        // Run main script
+        scheme::with_engine_mut(|engine| {
+            engine.run(format!(
+                "(require \"{}\")",
+                entrypoint.as_ref().to_str().ok_or_else(
+                    throw!(Generic => "Failed to convert entrypoint to string slice")
+                )?
+            ))
+        })?;
 
-    // Run async engine to completion
-    r#async::run();
+        // Run async engine to completion
+        r#async::run();
 
-    // Done
-    Ok(())
+        // Done
+        Ok(())
+    })
 }
 
 /// Create a Steel symbol from a Rust identifier or string literal

@@ -1,13 +1,20 @@
-(provide load-script unload-script get-script)
+(provide
+  scripts-dir scripts
+  %load-script load-script
+  %unload-script unload-script
+  get-script)
 
 (require "../scheme.scm")
 (require "../async.scm")
 
 (require-builtin freedom/log)
 
+(define scripts-dir (make-parameter "scheme"))
+
 (define *scripts* (hash))
 
-(define scripts-dir (make-parameter "scheme"))
+(define [scripts]
+  *scripts*)
 
 (define [script-path name]
   (define scripts-dir (scripts-dir))
@@ -36,23 +43,3 @@
   (when (not (hash-try-get *scripts* path))
     (%load-script path))
   (hash-get *scripts* path))
-
-;; Filesystem watcher
-(require "../fs/mod.scm")
-
-(define [path-relevant? path]
-  (define path (normalize-path path))
-  (hash-contains? *scripts* path))
-
-(define [apply-change change]
-  (define path (car change))
-  (define path (normalize-path path))
-  (define val (cadr change))
-  (match val
-    ['reload (%load-script path)]
-    ['unload (%unload-script path)]
-    [else void]))
-
-(spawn
-  (lambda ()
-    (watch-loop (scripts-dir) #t path-relevant? apply-change)))

@@ -1,6 +1,3 @@
-(require "async.scm")
-(require "scripts/mod.scm")
-
 (require-builtin freedom/log)
 
 (call-with-exception-handler

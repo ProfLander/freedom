@@ -45,4 +45,4 @@
 
 (info! "Starting winit...")
 (spawn
-  (#%winit-run #%executor init))
+  (#%winit-run #%scheme-config #%executor init))

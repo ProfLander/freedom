@@ -1,5 +1,4 @@
 use freedom::{
-    log::info,
     scheme::{
         Result,
         steel::{
@@ -12,7 +11,7 @@ use freedom::{
 };
 
 fn print_hello(_: &[SteelVal]) -> Result<SteelVal> {
-    info!("Hello, gubbins!");
+    println!("Hello, gubbin!");
     Ok(SteelVal::Void)
 }
 
@@ -22,11 +21,6 @@ fn module() -> BuiltInModule {
     module
 }
 
-fn init() {
-    freedom::log::init_local();
-    info!("Initialized library");
-}
-
 #[unsafe(no_mangle)]
 pub fn plugin() -> SteelVal {
     list![
@@ -34,7 +28,7 @@ pub fn plugin() -> SteelVal {
         list![
             list![
                 sym!(init),
-                SteelVal::FuncV(|_| { Ok(init().into_steelval()?) })
+                SteelVal::FuncV(|_| { Ok(SteelVal::Void) })
             ],
             list![
                 sym!(module),

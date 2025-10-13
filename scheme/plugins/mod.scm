@@ -1,4 +1,9 @@
-(provide load-plugin unload-plugin get-plugin #%require-plugin)
+(provide
+  plugins-dir plugins
+  %load-plugin load-plugin
+  %unload-plugin unload-plugin
+  get-plugin
+  #%require-plugin)
 
 (require-builtin freedom/log)
 (require-builtin freedom/loading)
@@ -6,10 +11,13 @@
 (require "../async.scm")
 (require "plugin.scm")
 
-(define *plugins* (hash))
-
 ;; Search directory parameter
 (define plugins-dir (make-parameter "target/debug/deps"))
+
+(define *plugins* (hash))
+
+(define [plugins]
+  *plugins*)
 
 ;; Given a plugin name, return a file path
 (define [plugin-path name]
@@ -49,22 +57,3 @@
 
 (define [plugin-module plugin]
   (Plugin-builtin plugin))
-
-;; Filesystem watcher
-(require "../fs/mod.scm")
-
-(define [path-relevant? path]
-  (define path (normalize-path path))
-  (hash-contains? *plugins* path))
-
-(define [apply-change change]
-  (define path (car change))
-  (define path (normalize-path path))
-  (define val (cadr change))
-  (match val
-    ['reload (%load-plugin path)]
-    [else void]))
-
-(spawn
-  (lambda ()
-    (watch-loop (plugins-dir) #t path-relevant? apply-change)))

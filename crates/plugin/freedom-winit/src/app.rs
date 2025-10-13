@@ -8,7 +8,7 @@ use freedom::{
     r#async::executor::Executor,
     log::{handle_error, handle_error_with, info},
     scheme::{
-        Result,
+        Result, SchemeConfig,
         steel::{
             SteelVal,
             rvals::{FromSteelVal, IntoSteelVal},
@@ -27,6 +27,7 @@ use winit::{
 
 use crate::{
     UserEvent, callback::Callback, event_loop::EventLoop, into_steelval::WinitIntoSteelVal,
+    window::Window,
 };
 
 static APP_RESUMED: &str = "*resumed*";
@@ -48,7 +49,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn run(executor: Executor, init: SteelVal) -> Result<SteelVal> {
+    pub fn run(config: SchemeConfig, executor: Executor, init: SteelVal) -> Result<SteelVal> {
         let SteelVal::ListV(init) = init else {
             stop!(TypeMismatch => "Expected a list, got: {init}");
         };
@@ -58,7 +59,11 @@ impl App {
             acc
         });
 
+        freedom::scheme::init(config)?;
+
         freedom::scheme::with_engine_mut(|engine| {
+            EventLoop::register_type(engine);
+            Window::register_type(engine);
             engine
                 .register_value(APP_RESUMED, false.into())
                 .register_value(APP_SUSPENDED, false.into())

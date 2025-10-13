@@ -1,7 +1,7 @@
 pub mod engine;
 pub mod program;
 
-use std::path::PathBuf;
+use std::{cell::OnceCell, path::PathBuf};
 
 pub use steel;
 
@@ -9,8 +9,9 @@ use crate::log::info;
 use steel::{
     SteelErr, SteelVal,
     gc::Gc,
-    rvals::{FutureResult, IntoSteelVal},
+    rvals::{Custom, FutureResult, IntoSteelVal},
     steel_vm::{builtin::BuiltInModule, engine::Engine as SteelEngine, register_fn::RegisterFn},
+    steelerr,
 };
 
 use crate::scheme::{engine::Engine, program::Program};
@@ -18,18 +19,16 @@ use crate::scheme::{engine::Engine, program::Program};
 pub type Result<T> = std::result::Result<T, SteelErr>;
 
 thread_local! {
-    static ENGINE: Engine = {
-        info!("Constructing new Engine on {:?}", std::thread::current().id());
-        let engine = Engine::new();
-        engine.borrow_mut().register_module(module())
-            .register_module(crate::log::module())
-            .register_module(crate::r#async::module().unwrap())
-            .register_module(crate::loading::module())
-            .register_module(crate::fs::module())
-            .register_module(crate::tempfile::module());
-        engine
-    };
+    static ENGINE: OnceCell<Engine> = OnceCell::new();
 }
+
+#[derive(Clone)]
+pub struct SchemeConfig {
+    /// Path to a scheme file which should run to initialize engine instances
+    pub kernel: String,
+}
+
+impl Custom for SchemeConfig {}
 
 fn module() -> BuiltInModule {
     let mut module = BuiltInModule::new("freedom/scheme");
@@ -43,12 +42,45 @@ fn module() -> BuiltInModule {
     module
 }
 
+pub fn init(config: SchemeConfig) -> Result<SteelVal> {
+    info!("Initializing scheme on {:?}", std::thread::current().id());
+    let engine = Engine::new();
+
+    engine
+        .borrow_mut()
+        .register_value("#%scheme-config", config.clone().into_steelval()?)
+        .register_module(module())
+        .register_module(crate::log::module())
+        .register_module(crate::r#async::module().unwrap())
+        .register_module(crate::loading::module())
+        .register_module(crate::tempfile::module())
+        .register_module(crate::fs::module())
+        .run(format!("(load \"{}\")", config.kernel))?;
+
+    ENGINE.with(|cell| {
+        cell.set(engine)
+            .or_else(|_| steelerr!(Generic => "Engine has already been initialized"))
+    })?;
+
+    Ok(SteelVal::Void)
+}
+
 pub fn with_engine<T>(f: impl FnOnce(&SteelEngine) -> T) -> T {
-    ENGINE.with(|engine| f(&engine.borrow()))
+    ENGINE.with(|engine| {
+        f(&engine
+            .get()
+            .expect("Engine has not been initialized")
+            .borrow())
+    })
 }
 
 pub fn with_engine_mut<T>(f: impl FnOnce(&mut SteelEngine) -> T) -> T {
-    ENGINE.with(|engine| f(&mut engine.borrow_mut()))
+    ENGINE.with(|engine| {
+        f(&mut engine
+            .get()
+            .expect("Engine has not been initialized")
+            .borrow_mut())
+    })
 }
 
 pub fn steel_future<F>(fut: F) -> SteelVal
