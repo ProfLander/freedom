@@ -11,7 +11,7 @@ use freedom::{
 };
 
 fn print_hello(_: &[SteelVal]) -> Result<SteelVal> {
-    println!("Hello, gubbin!");
+    println!("Hello, gubbins!");
     Ok(SteelVal::Void)
 }
 

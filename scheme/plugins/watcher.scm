@@ -1,5 +1,6 @@
 (require "mod.scm")
 (require "../fs/mod.scm")
+(require "../fs/watcher.scm")
 
 (define [path-relevant? path]
   (define path (normalize-path path))

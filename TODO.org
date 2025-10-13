@@ -11,7 +11,7 @@
 
 - [x] Move plugin system into Scheme
 
-- [ ] Finalize self-contained runtime
+- [x] Finalize self-contained runtime
   - Logging should be initialized from Scheme as part of kernel startup
   - Each address space that lazily constructs an engine needs it to be fully-formed and ready to go
   - Ergo, each instance of the engine needs to start with a path to a kernel script,
@@ -21,8 +21,19 @@
     - Winit takes quoted syntax in its run method
     - Another plugin might want to extend the kernel environment, then run a preset (or provided) entrypoint
 
-- [ ] Move FS watcher integration into a `freedom-notify` dylib
+- [x] Move FS watcher integration into a `freedom-notify` dylib
   - Can load from kernel after starting plugin system, setup plugin + script watching late
+
+- [ ] Replace `tempfile` module with a Scheme implementation and manual dropping
+  - `will-execute` functionality only available with `sync` flag, so not viable
+  - Dropping is controlled, so can run drop code (i.e. tempfile cleanup) manually
+
+- [ ] Move `#%spawn` and `#%await` into `Executor` as self-methods, use 'register type' pattern
+
+- [ ] Make executor non-static
+  - Static usage is self contained, and ultimately feeds a single callsite
+  - Can replace with local construction for better explicitness
+  - Not viable to do the same for Engine, as it needs to cross async boundaries and is not Send
 
 - [ ] Reintroduce threading
   - Spawn (1 * main) + (num_cpu * worker) threads from rust

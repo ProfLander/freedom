@@ -945,7 +945,6 @@ dependencies = [
  "freedom-build",
  "libloading",
  "log",
- "notify-debouncer-full",
  "smol",
  "steel-core",
  "tempfile",
@@ -955,6 +954,14 @@ dependencies = [
 [[package]]
 name = "freedom-build"
 version = "1.0.0"
+
+[[package]]
+name = "freedom-notify"
+version = "1.0.0"
+dependencies = [
+ "freedom",
+ "notify-debouncer-full",
+]
 
 [[package]]
 name = "freedom-stdio"

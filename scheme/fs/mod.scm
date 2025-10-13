@@ -1,6 +1,4 @@
-(provide normalize-path watch-loop)
-
-(require "watcher.scm")
+(provide normalize-path)
 
 (define [normalize-path path]
   (define path (trim-start-matches path (current-directory)))

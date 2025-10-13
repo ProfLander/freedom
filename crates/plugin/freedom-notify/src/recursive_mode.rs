@@ -1,10 +1,11 @@
-use steel::{
-    SteelVal, list,
-    rvals::{FromSteelVal, IntoSteelVal},
-    stop,
+use freedom::scheme::{
+    Result,
+    steel::{
+        SteelVal, list,
+        rvals::{FromSteelVal, IntoSteelVal},
+        stop,
+    },
 };
-
-use crate::Result;
 
 #[derive(Clone)]
 pub struct RecursiveMode(notify_debouncer_full::notify::RecursiveMode);
@@ -24,7 +25,7 @@ impl RecursiveMode {
 }
 
 impl IntoSteelVal for RecursiveMode {
-    fn into_steelval(self) -> steel::rvals::Result<SteelVal> {
+    fn into_steelval(self) -> freedom::scheme::Result<SteelVal> {
         Ok(list![
             "RecursiveMode",
             match self.0 {

@@ -1,0 +1,11 @@
+[package]
+name = "freedom-notify"
+version = "1.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+freedom = { workspace = true }
+notify-debouncer-full = "0.6.0"

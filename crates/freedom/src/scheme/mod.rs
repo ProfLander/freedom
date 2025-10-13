@@ -54,7 +54,6 @@ pub fn init(config: SchemeConfig) -> Result<SteelVal> {
         .register_module(crate::r#async::module().unwrap())
         .register_module(crate::loading::module())
         .register_module(crate::tempfile::module())
-        .register_module(crate::fs::module())
         .run(format!("(load \"{}\")", config.kernel))?;
 
     ENGINE.with(|cell| {

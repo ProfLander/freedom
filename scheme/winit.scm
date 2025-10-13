@@ -1,6 +1,3 @@
-(require "async.scm")
-(require "plugins/mod.scm")
-
 (#%require-plugin freedom_winit (only-in #%winit-run))
 
 (define-syntax winit-callback

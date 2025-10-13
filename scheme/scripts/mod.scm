@@ -4,9 +4,6 @@
   %unload-script unload-script
   get-script)
 
-(require "../scheme.scm")
-(require "../async.scm")
-
 (require-builtin freedom/log)
 
 (define scripts-dir (make-parameter "scheme"))

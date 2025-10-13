@@ -8,7 +8,6 @@
 (require-builtin freedom/log)
 (require-builtin freedom/loading)
 
-(require "../async.scm")
 (require "plugin.scm")
 
 ;; Search directory parameter

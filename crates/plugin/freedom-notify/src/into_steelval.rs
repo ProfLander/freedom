@@ -1,7 +1,13 @@
 pub use notify_debouncer_full;
-use steel::{SteelVal, list, rvals::IntoSteelVal};
 
-use crate::{Result, sym};
+use freedom::{
+    scheme::{
+        Result,
+        steel::{SteelVal, list, rvals::IntoSteelVal},
+    },
+    sym,
+};
+
 use notify_debouncer_full::{
     DebouncedEvent,
     notify::{

@@ -1,12 +1,12 @@
 (require "mod.scm")
 (require "../fs/mod.scm")
+(require "../fs/watcher.scm")
 
 (define [path-relevant? path]
   (define path (normalize-path path))
   (hash-contains? (scripts) path))
 
 (define [apply-change change]
-  (info! "apply-change" change)
   (define path (car change))
   (define path (normalize-path path))
   (define val (cadr change))

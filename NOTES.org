@@ -1,0 +1,36 @@
+#:TITLE Notes
+
+* Steel
+
+** Thread Safety
+- Steel's own `sync` feature is primarily oriented around enabling threading within Steel
+  - Involves sharing a single engine instance with internal locking
+  - Exploits immutability, but is prone to atomic deadlocks if addressed by multiple high-frequency sources
+    (ex. Winit event loop preventing other script processes from executing)
+  - Ergo, use a custom threading formulation with local thread-unsafe engines
+
+** Data Sharing
+- Steel's own `dylibs` feature is highly restricted by virtue of using a `cdylib` FFI interface
+  - Can't share any Rust datatypes, everything must be converted to `abi_stable` for transfer
+  - Relies on Steel's internal machinery, which is not fully exposed
+  - Ergo, use a custom Rust `dylib` interface
+
+- Compiled programs and lambdas may not be shared across thread or address space (dylib) boundaries
+  - If an engine attempts to execute a value from across a boundary, it will crash with an indexing error
+  - Ergo:
+    - Threads and address spaces must each have their own engine
+    - Code must be shared as quoted syntax or other safe-to-pass representation
+
+** Garbage Collection
+- Regular function registrations result in a boxed-function steel value
+  - This invokes post-GC drop handling when the slot recycler reclaims the object
+    - Results in a MAV if the function has been unloaded (i.e. along with its owning dylib)
+  - Native function registrations do not box or drop, and so are unload-safe, ergo safe to hot-reload
+
+** 'Will' Executor
+- Racket-style deallocation callback
+- Only enabled under `sync` feature, so presumably used for threading purposes
+- Ergo, if destructor functionality is needed, have to use a Custom type with a Rust-defined `Drop` implementation
+
+** Reflection
+- https://github.com/mattwparas/steel/discussions/417

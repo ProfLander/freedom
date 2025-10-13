@@ -1,23 +1,23 @@
-use smol::channel::Receiver;
-use steel::{
-    SteelVal,
-    rvals::{Custom, IntoSteelVal},
-    steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
-    stop,
+use freedom::{
+    r#async::smol::channel::Receiver,
+    scheme::steel::{
+        SteelVal,
+        rvals::{Custom, IntoSteelVal},
+        steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+        stop,
+    },
 };
 
 use std::{cell::RefCell, rc::Rc, time::Duration};
 
-use crate::{
-    Result,
-    r#async::smol::channel::unbounded,
-    fs::{into_steelval::FsIntoSteelVal, recursive_mode::RecursiveMode},
-    log::handle_error,
-    scheme::steel_future,
+use freedom::{
+    r#async::smol::channel::unbounded, log::handle_error, scheme::Result, scheme::steel_future,
 };
 use notify_debouncer_full::{
     DebounceEventResult, FileIdMap, new_debouncer, notify::ReadDirectoryChangesWatcher,
 };
+
+use crate::{into_steelval::FsIntoSteelVal, recursive_mode::RecursiveMode};
 
 pub type Debouncer = notify_debouncer_full::Debouncer<ReadDirectoryChangesWatcher, FileIdMap>;
 

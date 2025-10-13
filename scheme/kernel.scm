@@ -5,6 +5,7 @@
 
 (require "scheme.scm")
 (require "async.scm")
+
 (require "plugins/mod.scm")
 (require "scripts/mod.scm")
 

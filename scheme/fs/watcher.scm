@@ -1,9 +1,9 @@
 (provide watch-loop)
 
-(require "../async.scm")
-
-(require-builtin freedom/fs)
 (require-builtin freedom/log)
+
+(#%require-plugin freedom_notify
+  (only-in Watcher Watcher-watch Watcher-unwatch Watcher-events))
 
 (define watcher (Watcher 0.1 #f))
 
