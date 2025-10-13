@@ -66,10 +66,22 @@
 - [ ] Troubleshoot non-closing windows
   - May be an artifact of blocking the winit loop, or of scheme value capture
 
+- [ ] Investigate `module` syntax
+  - Likely has implications on the script system
+
 - [ ] Consider replacing scheme-level `script` abstraction with futures
   - Reduces definition load on freedom::async, since scripts could simply construct a future
     - Effectively equivalent, since they're spawned and run outside of scheme
   - Can likely apply similar logic to other value-spawning specializations, replace with future constructors
+
+- [ ] Stronger checking for async machinery
+  - Halting functions should throw a formal error if `halt` is `#f`
+    - i.e. If called outside of an `async` block
+  - Async blocks should set `halt` back to `#f` upon exit
+    - Currently overwrites on each async block, which moves the 'empty continuation' around unpredictably
+      - Benign with current use, but a poor formulation regardless
+      - May be better to use a stack approach so async blocks can be nested with appropriate behaviour?
+        - May also be overdoing it - are nested / sequential async blocks useful?
 
 - [ ] Reimplement wgpu + egui demo
   - Each their own plugin

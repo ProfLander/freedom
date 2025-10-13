@@ -18,7 +18,7 @@ freedom-build = { path = "crates/library/freedom-build" }
 
 log = "0.4.28"
 
-steel-core = { git = "https://github.com/mattwparas/steel", rev = "6bb6f17be7cb0ce932816a697cfafc669490d489", features = [
+steel-core = { git = "https://github.com/mattwparas/steel", rev = "e378cba22f7d16d9441ac3c3fe006bf31fc8eef6", features = [
     "markdown",        # Augment help functionality with markdown rendering
     "stacker",         # Grow the stack dynamically during transduction
     "triomphe",        # Use triophe library instead of std Arc
