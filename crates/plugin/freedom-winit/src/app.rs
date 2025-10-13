@@ -4,18 +4,16 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
-use freedom::{
-    r#async::executor::Executor,
+use freedom::scheme::{
+    Result, SchemeConfig,
+    r#async::Executor,
     log::{handle_error, handle_error_with, info},
-    scheme::{
-        Result, SchemeConfig,
-        steel::{
-            SteelVal,
-            rvals::{FromSteelVal, IntoSteelVal},
-            steelerr, stop, throw,
-        },
-        steel_future,
+    steel::{
+        SteelVal,
+        rvals::{FromSteelVal, IntoSteelVal},
+        steelerr, stop, throw,
     },
+    steel_future,
 };
 
 use winit::{
@@ -59,7 +57,7 @@ impl App {
             acc
         });
 
-        freedom::scheme::init(config)?;
+        freedom::scheme::init(config, executor.clone())?;
 
         freedom::scheme::with_engine_mut(|engine| {
             EventLoop::register_type(engine);

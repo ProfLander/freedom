@@ -1,7 +1,9 @@
 use std::sync::{Arc, Mutex};
 
-use freedom::r#async::smol::channel::bounded;
+use winit::{event_loop::ActiveEventLoop, window::WindowAttributes};
+
 use freedom::scheme::{
+    r#async::smol::channel::bounded,
     steel::{
         SteelVal,
         rvals::{Custom, IntoSteelVal},
@@ -10,7 +12,6 @@ use freedom::scheme::{
     },
     steel_future,
 };
-use winit::{event_loop::ActiveEventLoop, window::WindowAttributes};
 
 use crate::{from_steelval::WinitFromSteelVal, window::Window};
 

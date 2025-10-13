@@ -1,12 +1,15 @@
-use async_executor::StaticLocalExecutor;
-use log::debug;
 pub use smol;
 
-use smol::LocalExecutor;
-use steel::{steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn}, stop};
+use async_executor::StaticLocalExecutor;
+use log::debug;
+use smol::{LocalExecutor, block_on};
+use steel::{
+    steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+    stop,
+};
 
 use crate::{
-    log::handle_error,
+    scheme::log::handle_error,
     scheme::{
         Result,
         program::Program,
@@ -17,7 +20,13 @@ use crate::{
     },
 };
 
-#[derive(Clone)]
+pub fn module() -> Result<BuiltInModule> {
+    let mut module = BuiltInModule::new("freedom/async");
+    Executor::register_type(&mut module);
+    Ok(module)
+}
+
+#[derive(Clone, Copy)]
 pub struct Executor(&'static StaticLocalExecutor);
 
 impl Custom for Executor {}
@@ -106,5 +115,12 @@ impl Executor {
 
             Ok(())
         });
+    }
+
+    pub fn run(&self) {
+        let exe = self.unwrap();
+        while exe.try_tick() {
+            block_on(exe.tick());
+        }
     }
 }

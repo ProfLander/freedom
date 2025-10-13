@@ -1,20 +1,19 @@
-use freedom::{
-    r#async::smol::channel::Receiver,
-    scheme::steel::{
+use notify_debouncer_full::{
+    DebounceEventResult, FileIdMap, new_debouncer, notify::ReadDirectoryChangesWatcher,
+};
+use std::{cell::RefCell, rc::Rc, time::Duration};
+
+use freedom::scheme::{
+    Result,
+    r#async::smol::channel::{Receiver, unbounded},
+    log::handle_error,
+    steel::{
         SteelVal,
         rvals::{Custom, IntoSteelVal},
         steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
         stop,
     },
-};
-
-use std::{cell::RefCell, rc::Rc, time::Duration};
-
-use freedom::{
-    r#async::smol::channel::unbounded, log::handle_error, scheme::Result, scheme::steel_future,
-};
-use notify_debouncer_full::{
-    DebounceEventResult, FileIdMap, new_debouncer, notify::ReadDirectoryChangesWatcher,
+    steel_future,
 };
 
 use crate::{into_steelval::FsIntoSteelVal, recursive_mode::RecursiveMode};

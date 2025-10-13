@@ -30,7 +30,7 @@
 
 - [x] Move `#%spawn` and `#%await` into `Executor` as self-methods, use 'register type' pattern
 
-- [ ] Make executor non-static
+- [x] Make executor non-static
   - Static usage is self contained, and ultimately feeds a single callsite
   - Can replace with local construction for better explicitness
   - Not viable to do the same for Engine, as it needs to cross async boundaries and is not Send

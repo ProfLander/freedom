@@ -1,20 +1,16 @@
-pub mod r#async;
-pub mod fs;
-pub mod loading;
-pub mod log;
 pub mod scheme;
 
 use std::ffi::OsStr;
-
-use scheme::Result;
 use steel::throw;
 
-use crate::{log::handle_error_with, scheme::SchemeConfig};
+use scheme::{Result, SchemeConfig, r#async::Executor, log::handle_error_with};
 
 pub fn run<R: AsRef<OsStr>>(config: SchemeConfig, entrypoint: R) {
     handle_error_with(|| {
-        scheme::init(config)?;
-        
+        let executor = Executor::new();
+
+        scheme::init(config, executor)?;
+
         // Run main script
         scheme::with_engine_mut(|engine| {
             engine.run(format!(
@@ -26,7 +22,7 @@ pub fn run<R: AsRef<OsStr>>(config: SchemeConfig, entrypoint: R) {
         })?;
 
         // Run async engine to completion
-        r#async::run();
+        executor.run();
 
         // Done
         Ok(())

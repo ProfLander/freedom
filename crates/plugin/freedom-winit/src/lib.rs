@@ -6,9 +6,9 @@ pub mod into_steelval;
 pub mod window;
 
 use freedom::{
-    r#async::executor::Executor,
     scheme::{
         SchemeConfig,
+        r#async::Executor,
         steel::{
             SteelVal, list,
             rvals::{FromSteelVal, IntoSteelVal},

@@ -1,11 +1,14 @@
+pub mod r#async;
 pub mod engine;
+pub mod fs;
+pub mod loading;
+pub mod log;
 pub mod program;
 
 use std::{cell::OnceCell, path::PathBuf};
 
 pub use steel;
 
-use crate::log::info;
 use steel::{
     SteelErr, SteelVal,
     gc::Gc,
@@ -13,6 +16,7 @@ use steel::{
     steel_vm::{builtin::BuiltInModule, engine::Engine as SteelEngine, register_fn::RegisterFn},
     steelerr,
 };
+use {r#async::Executor, log::info};
 
 use crate::scheme::{engine::Engine, program::Program};
 
@@ -42,23 +46,24 @@ fn module() -> BuiltInModule {
     module
 }
 
-pub fn init(config: SchemeConfig) -> Result<SteelVal> {
+pub fn init(config: SchemeConfig, executor: Executor) -> Result<SteelVal> {
     info!("Initializing scheme on {:?}", std::thread::current().id());
 
     // Construct engine
     let engine = Engine::new();
 
-    crate::log::init();
+    log::init();
 
     // Perform infallible registration
     engine
         .borrow_mut()
         .register_value("#%scheme-config", config.clone().into_steelval()?)
+        .register_value("#%executor", executor.into_steelval()?)
         .register_module(module())
-        .register_module(crate::log::module())
-        .register_module(crate::r#async::module().unwrap())
-        .register_module(crate::loading::module())
-        .register_module(crate::fs::module());
+        .register_module(log::module())
+        .register_module(r#async::module().unwrap())
+        .register_module(loading::module())
+        .register_module(fs::module());
 
     // Emplace the engine
     ENGINE.with(|cell| {
