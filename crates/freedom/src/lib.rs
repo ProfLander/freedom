@@ -1,8 +1,9 @@
 pub mod r#async;
 pub mod fs;
+pub mod loading;
 pub mod log;
-pub mod plugins;
 pub mod scheme;
+pub mod tempfile;
 
 use std::ffi::OsStr;
 
@@ -10,33 +11,18 @@ use log::handle_error;
 use scheme::Result;
 use steel::throw;
 
-pub fn run<P: AsRef<OsStr>, Q: AsRef<OsStr>, R: AsRef<OsStr>>(
-    plugin_dir: P,
-    script_dir: Q,
-    entrypoint: R,
-) {
-    handle_error(run_result(plugin_dir, script_dir, entrypoint));
+pub fn run<R: AsRef<OsStr>>(entrypoint: R) {
+    handle_error(run_result(entrypoint));
 }
 
-pub fn run_result<P: AsRef<OsStr>, Q: AsRef<OsStr>, R: AsRef<OsStr>>(
-    plugin_dir: P,
-    script_dir: Q,
-    entrypoint: R,
-) -> Result<()> {
+pub fn run_result<R: AsRef<OsStr>>(entrypoint: R) -> Result<()> {
     // Setup logging
     log::init();
-
-    // Setup plugins
-    plugins::init(&plugin_dir)?;
 
     // Run main script
     scheme::with_engine_mut(|engine| {
         engine.run(format!(
-            "(require \"{}/{}\")",
-            script_dir
-                .as_ref()
-                .to_str()
-                .ok_or_else(throw!(Generic => "Failed to convert script dir to string slice"))?,
+            "(require \"{}\")",
             entrypoint
                 .as_ref()
                 .to_str()

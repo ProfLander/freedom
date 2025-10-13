@@ -6,11 +6,13 @@ pub mod into_steelval;
 pub mod window;
 
 use freedom::{
-    plugins::plugin::PluginInterface,
+    r#async::executor::Executor,
     scheme::steel::{
-        SteelVal,
-        steel_vm::{builtin::BuiltInModule, register_fn::RegisterFn},
+        SteelVal, list,
+        rvals::{FromSteelVal, IntoSteelVal},
+        steel_vm::builtin::{Arity, BuiltInModule},
     },
+    sym,
 };
 
 use crate::{app::App, event_loop::EventLoop, window::Window};
@@ -27,15 +29,29 @@ fn init() {
 
 fn module() -> BuiltInModule {
     let mut module = BuiltInModule::new("freedom/winit");
-    module.register_fn("#%winit-run", App::run);
-    module.register_fn("#%winit-send", App::send);
+    module.register_native_fn(
+        "#%winit-run",
+        |args| App::run(Executor::from_steelval(&args[0])?, args[1].clone()),
+        Arity::Exact(2),
+    );
+    module.register_native_fn(
+        "#%winit-send",
+        |args| App::send(args[0].clone()),
+        Arity::Exact(1),
+    );
     module
 }
 
 #[unsafe(no_mangle)]
-pub fn plugin() -> PluginInterface {
-    PluginInterface {
-        init,
-        module,
-    }
+pub fn plugin() -> SteelVal {
+    list![
+        sym!(Plugin),
+        list![
+            list![sym!(init), SteelVal::FuncV(|_| Ok(init().into_steelval()?))],
+            list![
+                sym!(module),
+                SteelVal::FuncV(|_| { Ok(module().into_steelval()?) })
+            ]
+        ]
+    ]
 }

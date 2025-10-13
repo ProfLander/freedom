@@ -1,7 +1,5 @@
-(require "core.scm")
 (require "async.scm")
-
-(require-builtin freedom/async)
+(require "plugins/mod.scm")
 
 (#%require-plugin freedom_winit (only-in #%winit-run))
 

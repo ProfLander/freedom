@@ -1,4 +1,4 @@
-(provide yield await spawn)
+(provide yield await spawn #%executor)
 
 (require-builtin freedom/async)
 

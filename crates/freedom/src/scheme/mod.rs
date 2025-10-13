@@ -24,8 +24,9 @@ thread_local! {
         engine.borrow_mut().register_module(module())
             .register_module(crate::log::module())
             .register_module(crate::r#async::module().unwrap())
+            .register_module(crate::loading::module())
             .register_module(crate::fs::module())
-            .register_module(crate::plugins::module());
+            .register_module(crate::tempfile::module());
         engine
     };
 }
@@ -56,20 +57,4 @@ where
 {
     // Return a future to run the winit event loop
     SteelVal::FutureV(Gc::new(FutureResult::new(Box::pin(fut))))
-}
-
-#[macro_export]
-macro_rules! err {
-    ($type:ident => $fmt:expr, $($arg:tt)+) => {
-        $crate::scheme::steel::rerrs::SteelErr::new($crate::scheme::steel::rerrs::ErrorKind::$type, format!($fmt, $($arg)+))
-    };
-    ($type:ident => $thing:expr) => {
-        $crate::scheme::steel::rerrs::SteelErr::new($crate::scheme::steel::rerrs::ErrorKind::$type, ($thing).to_string())
-    };
-    ($type:ident => $thing:expr; $span:expr) => {
-        $crate::scheme::steel::rerrs::SteelErr::new($crate::scheme::steel::rerrs::ErrorKind::$type, ($thing).to_string()).with_span($span)
-    };
-    ($type:ident => $thing:expr; $span:expr; $source:expr) => {
-        $crate::scheme::steel::rerrs::SteelErr::new($crate::scheme::steel::rerrs::ErrorKind::$type, ($thing).to_string()).with_span($span).with_source($source)
-    };
 }

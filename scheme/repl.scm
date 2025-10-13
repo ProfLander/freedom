@@ -1,6 +1,5 @@
-(require "core.scm")
 (require "async.scm")
-(require "scripts.scm")
+(require "scripts/mod.scm")
 
 (require-builtin freedom/log)
 

@@ -1,5 +1,6 @@
 (require "async.scm")
-(require "scripts.scm")
+(require "plugins/mod.scm")
+(require "scripts/mod.scm")
 
 (spawn
   (get-script 'print-loop)
