@@ -42,7 +42,8 @@
   (%load-plugin path))
 
 (define [%unload-plugin path]
-  (define old-plugin (hash-remove *plugins* path))
+  (define old-plugin (hash-try-get *plugins* path))
+  (set! *plugins* (hash-remove *plugins* path))
   (try-cleanup old-plugin))
 
 (define [unload-plugin name]
