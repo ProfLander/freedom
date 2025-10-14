@@ -8,8 +8,8 @@ use steel::{
     stop,
 };
 
+use crate::log::handle_error;
 use crate::{
-    scheme::log::handle_error,
     scheme::{
         Result,
         program::Program,

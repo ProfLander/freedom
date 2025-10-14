@@ -51,7 +51,7 @@
       - When all are busy, tasks should either queue, or spawn onto threads in a round-robin fashion
         - Queueing introduces more overhead per op since threads have to sync and fetch a new task
         - Round-robin risks spawning a short task on a thread that's already processing a long one
-          - That said, if we assume all pool tasks are properly async, this should not be a problem
+          - Not a problem for tasks with several await points, but long-blocking tasks are an issue
     - Attempting to take from pool when only 1 thread remains should spawn a new one
       - Pool should always have at least 1 thread to maintain parallelism semantic
 
@@ -74,7 +74,14 @@
     - Effectively equivalent, since they're spawned and run outside of scheme
   - Can likely apply similar logic to other value-spawning specializations, replace with future constructors
 
-- [ ] Stronger checking for async machinery
+- [ ] Reimplement wgpu + egui demo
+  - Each their own plugin
+  - Load in winit address space
+  - Expose functions to be called by winit
+  - Neither should need to touch engine or executor
+  - Can reuse implementations from freedom-v1
+
+- [ ] Stronger checking for async machinery?
   - Halting functions should throw a formal error if `halt` is `#f`
     - i.e. If called outside of an `async` block
   - Async blocks should set `halt` back to `#f` upon exit
@@ -82,13 +89,6 @@
       - Benign with current use, but a poor formulation regardless
       - May be better to use a stack approach so async blocks can be nested with appropriate behaviour?
         - May also be overdoing it - are nested / sequential async blocks useful?
-
-- [ ] Reimplement wgpu + egui demo
-  - Each their own plugin
-  - Load in winit address space
-  - Expose functions to be called by winit
-  - Neither should need to touch engine or executor
-  - Can reuse implementations from freedom-v1
 
 - [ ] `build.rs` machinery for shipping scheme files in crates
   - Preferably not as raw text

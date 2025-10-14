@@ -27,10 +27,12 @@ fn module() -> BuiltInModule {
     module.register_native_fn(
         "#%winit-run",
         |args| {
+            freedom::log::init();
             App::run(
-                SchemeConfig::from_steelval(&args[0])?,
-                Executor::from_steelval(&args[1])?,
-                args[2].clone(),
+                usize::from_steelval(&args[0])?,
+                SchemeConfig::from_steelval(&args[1])?,
+                Executor::from_steelval(&args[2])?,
+                args[3].clone(),
             )
         },
         Arity::Exact(3),

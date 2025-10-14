@@ -2,7 +2,6 @@ pub mod r#async;
 pub mod engine;
 pub mod fs;
 pub mod loading;
-pub mod log;
 pub mod program;
 
 use std::{cell::OnceCell, path::PathBuf};
@@ -46,21 +45,20 @@ fn module() -> BuiltInModule {
     module
 }
 
-pub fn init(config: SchemeConfig, executor: Executor) -> Result<SteelVal> {
-    info!("Initializing scheme on {:?}", std::thread::current().id());
+pub fn init(worker_id: usize, config: SchemeConfig, executor: Executor) -> Result<SteelVal> {
+    info!("Initializing scheme on {:?}", worker_id);
 
     // Construct engine
     let engine = Engine::new();
 
-    log::init();
-
     // Perform infallible registration
     engine
         .borrow_mut()
+        .register_value("*worker-id*", worker_id.into())
         .register_value("#%scheme-config", config.clone().into_steelval()?)
         .register_value("#%executor", executor.into_steelval()?)
         .register_module(module())
-        .register_module(log::module())
+        .register_module(crate::log::module())
         .register_module(r#async::module().unwrap())
         .register_module(loading::module())
         .register_module(fs::module());

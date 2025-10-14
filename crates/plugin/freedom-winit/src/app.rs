@@ -4,16 +4,18 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
-use freedom::scheme::{
-    Result, SchemeConfig,
-    r#async::Executor,
+use freedom::{
     log::{handle_error, handle_error_with, info},
-    steel::{
-        SteelVal,
-        rvals::{FromSteelVal, IntoSteelVal},
-        steelerr, stop, throw,
+    scheme::{
+        Result, SchemeConfig,
+        r#async::Executor,
+        steel::{
+            SteelVal,
+            rvals::{FromSteelVal, IntoSteelVal},
+            steelerr, stop, throw,
+        },
+        steel_future,
     },
-    steel_future,
 };
 
 use winit::{
@@ -47,7 +49,12 @@ pub struct App {
 }
 
 impl App {
-    pub fn run(config: SchemeConfig, executor: Executor, init: SteelVal) -> Result<SteelVal> {
+    pub fn run(
+        worker_id: usize,
+        config: SchemeConfig,
+        executor: Executor,
+        init: SteelVal,
+    ) -> Result<SteelVal> {
         let SteelVal::ListV(init) = init else {
             stop!(TypeMismatch => "Expected a list, got: {init}");
         };
@@ -57,7 +64,7 @@ impl App {
             acc
         });
 
-        freedom::scheme::init(config, executor.clone())?;
+        freedom::scheme::init(worker_id, config, executor.clone())?;
 
         freedom::scheme::with_engine_mut(|engine| {
             EventLoop::register_type(engine);

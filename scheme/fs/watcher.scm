@@ -1,9 +1,9 @@
-(provide watch-loop)
+(provide watch-loop stop-watcher)
 
 (require-builtin freedom/log)
 
 (#%require-plugin freedom_notify
-  (only-in Watcher Watcher-watch Watcher-unwatch Watcher-events))
+  (only-in Watcher Watcher-watch Watcher-unwatch Watcher-events Watcher-stop))
 
 (define watcher (Watcher 0.1 #f))
 
@@ -55,8 +55,11 @@
   (info! "Watching" path "for changes")
   (watch path recursive)
   (define handle-changes (event-changes relevant))
-  (info! "handle-changes" handle-changes)
   (while #t
     (define events (await (Watcher-events watcher)))
     (define changes (filter id (map handle-changes events)))
     (for-each with changes)))
+
+(define [stop-watcher]
+  (Watcher-stop watcher)
+  (set! watcher void))
