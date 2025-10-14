@@ -55,7 +55,7 @@
   (info! "Watching" path "for changes")
   (watch path recursive)
   (define handle-changes (event-changes relevant))
-  (while #t
+  (while watcher
     (define events (await (Watcher-events watcher)))
     (define changes (filter id (map handle-changes events)))
     (for-each with changes)))

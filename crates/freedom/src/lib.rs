@@ -1,49 +1,42 @@
 pub mod log;
 pub mod scheme;
 
-use easy_parallel::Parallel;
 use std::ffi::OsStr;
-use steel::throw;
 
 use log::handle_error_with;
 use scheme::{Result, SchemeConfig, r#async::Executor};
+use steel::steel_vm::engine::Engine;
 
-pub fn run<P: AsRef<OsStr>, Q: AsRef<OsStr>>(config: SchemeConfig, main: P, worker: Q) {
+pub fn run<P: AsRef<OsStr>>(config: SchemeConfig, main: P) {
     log::init();
 
-    let thread_count = 1;
-
-    let main = main.as_ref();
-    let worker = worker.as_ref();
-    let mut par = Parallel::new();
-    for i in 1..thread_count {
-        par = par.add({
-            let config = config.clone();
-            move || worker_thread(i, config, worker)
-        });
-    }
-    let _ = par.finish(|| worker_thread(0, config, main));
+    handle_error_with(|| {
+        worker_thread_run(config, main);
+        Ok(())
+    })
 }
 
-pub fn worker_thread<P: AsRef<OsStr>>(worker_id: usize, config: SchemeConfig, entrypoint: P) {
-    handle_error_with(|| {
-        let executor = Executor::new();
+pub fn worker_thread_run<P: AsRef<OsStr>>(config: SchemeConfig, entrypoint: P) {
+    let entrypoint = entrypoint.as_ref().to_string_lossy().to_string();
+    worker_thread_run_with(config, |engine| engine.run(entrypoint));
+}
 
-        scheme::init(worker_id, config, executor)?;
+pub fn worker_thread_run_with<F, T>(config: SchemeConfig, f: F)
+where
+    F: FnOnce(&mut Engine) -> Result<T>,
+{
+    let executor = Executor::new();
+
+    handle_error_with(|| {
+        scheme::init(config, executor)?;
 
         // Run main script
-        scheme::with_engine_mut(|engine| {
-            engine.run(format!(
-                "(require \"{}\")",
-                entrypoint.as_ref().to_str().ok_or_else(
-                    throw!(Generic => "Failed to convert entrypoint to string slice")
-                )?
-            ))
-        })?;
+        scheme::with_engine_mut(f)?;
 
         // Run async engine to completion
         executor.run();
-        
+
+        // Invoke exit callback
         scheme::with_engine_mut(|engine| {
             engine.run(format!("(when (function? *on-exit*) (*on-exit*))"))
         })?;

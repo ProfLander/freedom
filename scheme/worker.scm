@@ -1,6 +1,6 @@
-(info! "worker on thread" *worker-id*)
+(info! "worker")
 
 ;(async
 ;  (spawn (get-script 'print-loop)))
 
-(info! "worker" *worker-id* "done")
+(info! "worker done")

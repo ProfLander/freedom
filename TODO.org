@@ -35,25 +35,34 @@
   - Can replace with local construction for better explicitness
   - Not viable to do the same for Engine, as it needs to cross async boundaries and is not Send
 
-- [ ] Reintroduce threading
-  - Spawn (1 * main) + (num_cpu * worker) threads from rust
-  - Have each call `make-channels` and pass its sender to the main thread
-    - Compose a shared bus from these senders
-    - Propagate to all threads via channel as an initial sync-and-start
-      - Prevents any comms / task spawning before everything is ready
-    - Use for all inter-thread coordination
-      - i.e. A thread can send a task + its sender to another thread in order to model a callback
-  - Control from scheme
-    - Handles to initial set of threads are stored in a pool
-    - Can take from pool to assign a specialized task to a thread
-    - Can spawn a task onto the remaining threads via specialized function
-      - This should mark a thread as busy and prevent it from being taken for specialized use
-      - When all are busy, tasks should either queue, or spawn onto threads in a round-robin fashion
-        - Queueing introduces more overhead per op since threads have to sync and fetch a new task
-        - Round-robin risks spawning a short task on a thread that's already processing a long one
-          - Not a problem for tasks with several await points, but long-blocking tasks are an issue
-    - Attempting to take from pool when only 1 thread remains should spawn a new one
-      - Pool should always have at least 1 thread to maintain parallelism semantic
+- Reintroduce threading
+  - [x] Expose means for scheme to spawn threads
+  - [ ] Implement local equivalent of SerializableSteelVal, minus the illegal-to-share parts
+    - Necessary for access, as built-in inter-thread pipeline crashes without `sync` feature
+  - [ ] Implement bindings to smol channels
+    - Provide blocking / async / try methods for convenience
+  - [ ] Implement spawn-thread-with-environment setup
+    - Pass quoted entrypoint (list of exprs, not a lambda) and environment as serializable
+    - Unserialize on the other end and evaluate
+      - NOTE: Can likely avoid existing convert-to-string-and-run pattern
+        by registering quoted value with engine as `*meta-expression*` or similar
+
+- [ ] Restructure script system around scheme modules
+  - `module` syntax yields a hash table of provided values, binds them in the defining scope
+  - i.e. `(module my-module (provide gubbin) (define gubbin 1234))` yields
+         `'#hash((gubbin . 1234))`
+  - Provides surface to implement a system akin to Lua modules
+  - Avoids having to store scripts as `RawProgramWithSymbols`
+    - Can wrap textual scripts in `(module <script name> . <body>)`
+      - `provide` form is mandatory, so will need to check body for it and sub in `(provide void)` if missing
+  - Should ultimately be able to replace the built-in `require` with a script-addressing version
+    - Use identifiers for paths, no extension, relative to script folder root
+      - i.e. Allow local paths via `child/module`, and rooted via `/child/module`
+
+- [ ] Fix MAV when dropping active file watcher
+  - Occurs due to `notify-windows` thread not terminating immediately on drop
+    - Attempts to deallocate, and fails
+  - Need to check if the underlying watcher has an interface to this
 
 - [ ] Implement async stdio
   - Blocking prevents winit from functioning properly

@@ -1,8 +1,7 @@
 use freedom::scheme::SchemeConfig;
 
-static KERNEL: &str = "scheme/kernel.scm";
-static MAIN: &str = "scheme/main.scm";
-static WORKER: &str = "scheme/worker.scm";
+static KERNEL: &str = "(load \"scheme/kernel.scm\")";
+static MAIN: &str = "(load \"scheme/main.scm\")";
 
 // Entrypoint
 fn main() {
@@ -11,6 +10,5 @@ fn main() {
             kernel: KERNEL.to_string(),
         },
         MAIN,
-        WORKER,
     )
 }

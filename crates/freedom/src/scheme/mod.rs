@@ -2,6 +2,7 @@ pub mod r#async;
 pub mod engine;
 pub mod fs;
 pub mod loading;
+pub mod parallel;
 pub mod program;
 
 use std::{cell::OnceCell, path::PathBuf};
@@ -45,8 +46,15 @@ fn module() -> BuiltInModule {
     module
 }
 
-pub fn init(worker_id: usize, config: SchemeConfig, executor: Executor) -> Result<SteelVal> {
-    info!("Initializing scheme on {:?}", worker_id);
+pub fn init(config: SchemeConfig, executor: Executor) -> Result<SteelVal> {
+    let thread = std::thread::current();
+    info!(
+        "Initializing scheme for {}...",
+        thread
+            .name()
+            .map(ToString::to_string)
+            .unwrap_or_else(|| format!("{:?}", thread.id()))
+    );
 
     // Construct engine
     let engine = Engine::new();
@@ -54,14 +62,14 @@ pub fn init(worker_id: usize, config: SchemeConfig, executor: Executor) -> Resul
     // Perform infallible registration
     engine
         .borrow_mut()
-        .register_value("*worker-id*", worker_id.into())
         .register_value("#%scheme-config", config.clone().into_steelval()?)
         .register_value("#%executor", executor.into_steelval()?)
         .register_module(module())
         .register_module(crate::log::module())
-        .register_module(r#async::module().unwrap())
+        .register_module(fs::module())
         .register_module(loading::module())
-        .register_module(fs::module());
+        .register_module(r#async::module()?)
+        .register_module(parallel::module());
 
     // Emplace the engine
     ENGINE.with(|cell| {
@@ -70,12 +78,7 @@ pub fn init(worker_id: usize, config: SchemeConfig, executor: Executor) -> Resul
     })?;
 
     // Run kernel
-    ENGINE.with(|cell| {
-        cell.get()
-            .unwrap()
-            .borrow_mut()
-            .run(format!("(load \"{}\")", config.kernel))
-    })?;
+    ENGINE.with(|cell| cell.get().unwrap().borrow_mut().run(config.kernel))?;
 
     Ok(SteelVal::Void)
 }

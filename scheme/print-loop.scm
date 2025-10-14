@@ -2,4 +2,4 @@
 
 (print-hello)
 
-(spawn (get-script 'print-loop))
+(async (spawn (get-script 'print-loop)))

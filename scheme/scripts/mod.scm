@@ -19,7 +19,7 @@
   (string-append scripts-dir "/" name ".scm"))
 
 (define [%load-script path]
-  (info! "Loading" path "...")
+  (info! "Loading script from" path "...")
   (define port (open-input-file path))
   (define src (read-port-to-string port))
   (define script (await (#%compile src path)))

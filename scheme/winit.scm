@@ -23,7 +23,7 @@
       (info! "suspended"))
 
     (define [*new-events* el cause]
-      (info! "new events:" cause))
+      (debug! "new events:" cause))
 
     (define [*device-event* el dev ev]
       (info! dev ev))
@@ -32,7 +32,7 @@
       (info! win ev))
 
     (define [*about-to-wait* el]
-      (info! "about to wait"))
+      (debug! "about to wait"))
 
     (define [*exiting* el]
       (info! "exiting"))
@@ -41,5 +41,4 @@
       (info! "memory warning"))))
 
 (info! "Starting winit...")
-(spawn
-  (#%winit-run *worker-id* #%scheme-config #%executor init))
+(await (#%winit-run #%scheme-config #%executor init))

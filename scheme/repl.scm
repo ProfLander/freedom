@@ -4,8 +4,9 @@
   (lambda (e)
     (error! "ERROR:" e))
   (lambda ()
+    (displayln "*repl-tx*:" *repl-tx*)
     (display "> ")
     (flush-output-port (current-output-port))
     (displayln (eval-string (read-line)))))
 
-(spawn (get-script 'repl))
+(async (spawn (get-script 'repl)))

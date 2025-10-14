@@ -30,7 +30,7 @@
 
 ;; Load a plugin by path
 (define [#%load-plugin path]
-  (info! "Loading" path "...")
+  (info! "Loading plugin from" path "...")
 
   (define temp-dir (temp-dir))
   (define tempfile (string-append temp-dir (unique-id) "-" (file-name path)))

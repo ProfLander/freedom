@@ -49,12 +49,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn run(
-        worker_id: usize,
-        config: SchemeConfig,
-        executor: Executor,
-        init: SteelVal,
-    ) -> Result<SteelVal> {
+    pub fn run(config: SchemeConfig, executor: Executor, init: SteelVal) -> Result<SteelVal> {
         let SteelVal::ListV(init) = init else {
             stop!(TypeMismatch => "Expected a list, got: {init}");
         };
@@ -64,7 +59,7 @@ impl App {
             acc
         });
 
-        freedom::scheme::init(worker_id, config, executor.clone())?;
+        freedom::scheme::init(config, executor.clone())?;
 
         freedom::scheme::with_engine_mut(|engine| {
             EventLoop::register_type(engine);
