@@ -1,0 +1,11 @@
+[package]
+name = "freedom-cpal"
+version = "1.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
+freedom = { workspace = true }
+cpal = "0.16.0"

@@ -8,6 +8,7 @@ members = [
     "crates/plugin/freedom-stdio",
     "crates/plugin/freedom-notify",
     "crates/plugin/freedom-winit",
+    "crates/plugin/freedom-cpal",
     "crates/plugin/library",
 ]
 
