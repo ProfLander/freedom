@@ -4,6 +4,7 @@ pub mod fs;
 pub mod loading;
 pub mod parallel;
 pub mod program;
+pub mod binding;
 
 use std::{cell::OnceCell, path::PathBuf};
 
