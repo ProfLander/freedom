@@ -1,5 +1,5 @@
 use notify_debouncer_full::{
-    DebounceEventResult, FileIdMap, new_debouncer, notify::ReadDirectoryChangesWatcher,
+    DebounceEventResult, new_debouncer, notify::RecommendedWatcher,
 };
 use std::{cell::RefCell, rc::Rc, time::Duration};
 
@@ -20,7 +20,13 @@ use freedom::{
 
 use crate::{into_steelval::FsIntoSteelVal, recursive_mode::RecursiveMode};
 
-pub type Debouncer = notify_debouncer_full::Debouncer<ReadDirectoryChangesWatcher, FileIdMap>;
+#[cfg(not(windows))]
+pub type Cache = notify_debouncer_full::NoCache;
+
+#[cfg(windows)]
+pub type Cache = notify_debouncer_full::FileIdMap;
+
+pub type Debouncer = notify_debouncer_full::Debouncer<RecommendedWatcher, Cache>;
 
 #[derive(Clone)]
 pub struct Watcher {

@@ -33,7 +33,7 @@
   (info! "Loading plugin from" path "...")
 
   (define temp-dir (temp-dir))
-  (define tempfile (string-append temp-dir (unique-id) "-" (file-name path)))
+  (define tempfile (string-append temp-dir "/" (unique-id) "-" (file-name path)))
 
   (info! "Copying" path "to tempfile at" tempfile "...");
   (copy-file! path tempfile)
